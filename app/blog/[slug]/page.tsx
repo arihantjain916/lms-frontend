@@ -54,31 +54,31 @@ export default function BlogDetailsPage() {
 
   /* ================= FETCH COMMENTS ================= */
 
-   const fetchComments = async (id:string) => {
-      try {
-        const res = await instance.get(`/blog/${id}/comments`);
+  const fetchComments = async (id: string) => {
+    try {
+      const res = await instance.get(`/blog/${id}/comments`);
 
-        const safeComments: Comment[] = (res.data || [])
-          .filter(Boolean) // 🔥 removes undefined/null
-          .map((c: any) => ({
-            id: c.id,
-            message: c.message,
-            createdAt: c.createdAt,
-            user: c.user || { name: "Anonymous" },
-          }));
+      const safeComments: Comment[] = (res.data || [])
+        .filter(Boolean) // 🔥 removes undefined/null
+        .map((c: any) => ({
+          id: c.id,
+          comment: c.comment,
+          createdAt: c.createdAt,
+          user: c.user || { name: "Anonymous" },
+        }));
 
-        setComments(safeComments);
-      } catch (error) {
-        console.error("Failed to fetch comments", error);
-        setComments([]);
-      } finally {
-        setCommentsLoading(false);
-      }
-    };
+      setComments(safeComments);
+    } catch (error) {
+      console.error("Failed to fetch comments", error);
+      setComments([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
   useEffect(() => {
     if (!blog?.id) return;
 
-    
+
 
     fetchComments(blog?.id);
   }, [blog?.id]);
@@ -237,6 +237,7 @@ export default function BlogDetailsPage() {
                 key={c.id}
                 className="flex gap-4 border p-4 rounded-lg"
               >
+
                 <Avatar>
                   <AvatarFallback>
                     {c.user?.name?.charAt(0) ?? "U"}
