@@ -89,6 +89,8 @@ export default function LoginPage() {
         return toast.error(res?.message || "Login successful");
       }
 
+      localStorage.setItem("token", res?.token);
+
       toast.success("Login successful");
 
       router.push("/");
@@ -145,11 +147,10 @@ export default function LoginPage() {
                     name="email"
                     type="text"
                     placeholder="name@example.com"
-                    className={`pl-10 ${
-                      errors.email
+                    className={`pl-10 ${errors.email
                         ? "border-red-500 focus-visible:ring-red-500"
                         : ""
-                    }`}
+                      }`}
                     value={formData.email}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -182,11 +183,10 @@ export default function LoginPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`pl-10 ${
-                      errors.password
+                    className={`pl-10 ${errors.password
                         ? "border-red-500 focus-visible:ring-red-500"
                         : ""
-                    }`}
+                      }`}
                     value={formData.password}
                     onChange={handleChange}
                     disabled={isLoading}

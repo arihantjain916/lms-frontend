@@ -21,7 +21,7 @@ export default function BlogDetailsPage() {
       try {
         const encodedSlug = encodeURIComponent(slug);
         const res = await instance.get(`/blog/${encodedSlug}`);
-        setBlog(res.data?.data ?? null);
+        setBlog(res.data ?? null);
       } catch (error) {
         console.error("Failed to fetch blog:", error);
         setBlog(null);
