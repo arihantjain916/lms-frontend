@@ -167,7 +167,11 @@ export default function BlogDetailsPage() {
 
       {/* ================= CONTENT ================= */}
       <section className="container max-w-4xl py-16">
-        <div className="prose max-w-none">{blog.content}</div>
+      <div
+  className="prose max-w-none"
+  dangerouslySetInnerHTML={{ __html: blog.content }}
+/>
+
 
         {/* ================= AUTHOR ================= */}
         <Card className="mt-12">
