@@ -11,8 +11,26 @@ instance.interceptors.response.use(
   (response) => {
     return response.data;
   },
-  (error) => {
-    // Handle errors here if needed
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== "/auth/refresh"
+    ) {
+      originalRequest._retry = true;
+      try {
+        const res = await axios.get("https://192.168.1.15:8080/api/auth/refresh", {
+          withCredentials: true,
+        });
+        const token = res?.data?.data;
+        localStorage.setItem("token", token);
+        return instance(originalRequest);
+      } catch (e: any) {
+        localStorage.removeItem("token");
+        return Promise.reject(e);
+      }
+    }
     return error.response.data;
   }
 );
