@@ -115,6 +115,7 @@ export default function RegisterPage() {
     // Simulate API call
     try {
       const res: any = await instance.post("/auth/register", {
+        name: formData.fullName,
         email: formData.email,
         username: formData.username,
         password: formData.password,
