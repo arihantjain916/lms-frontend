@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "https://192.168.1.15:8080/api/",
+  baseURL: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/`,
   timeout: 1000,
   headers: { "X-Custom-Header": "foobar" },
   withCredentials: true,
@@ -20,7 +20,7 @@ instance.interceptors.response.use(
     ) {
       originalRequest._retry = true;
       try {
-        const res = await axios.get("https://192.168.1.15:8080/api/auth/refresh", {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/refresh`, {
           withCredentials: true,
         });
         const token = res?.data?.data;

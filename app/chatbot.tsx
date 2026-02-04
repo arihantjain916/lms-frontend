@@ -1,16 +1,17 @@
 "use client";
 import React, { useState, useRef, useEffect, Ref } from "react";
 import { FaCommentDots } from "react-icons/fa";
-import { Client } from '@stomp/stompjs';
+import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import instance from "@/helper/axios";
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
+  const [messages, setMessages] = useState<{ from: string; text: string }[]>(
+    [],
+  );
   const [input, setInput] = useState("");
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const stompRef = useRef<Client | null>(null);
-
 
   const toggleChat = () => setIsOpen(!isOpen);
 
@@ -42,7 +43,6 @@ const Chatbot = () => {
   //     };
   //   }
 
-
   //   stompClient.onWebSocketError = (error) => {
   //     console.error('Error with websocket', error);
   //   };
@@ -55,7 +55,6 @@ const Chatbot = () => {
   //     Authorization: `Bearer ${localStorage.getItem("token")}`,
   //   };
   //   stompClient.activate();
-
 
   //   stompRef.current = stompClient;
 
@@ -78,7 +77,8 @@ const Chatbot = () => {
     }
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("https://localhost:8080/api/ws"),
+      webSocketFactory: () =>
+        new SockJS(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ws`),
       connectHeaders: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -103,7 +103,7 @@ const Chatbot = () => {
             ...prev,
             { from: "bot", text: message?.message },
           ]);
-        }
+        },
       );
     };
 
@@ -127,51 +127,47 @@ const Chatbot = () => {
     };
   }, [isOpen]);
 
-
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) return;
 
     async function fetchChats() {
       try {
         const res = await instance.get(`/chat`);
-        const chats = res?.data
+        const chats = res?.data;
 
         chats?.forEach((chatItem: { prompt: string; response: string }) => {
-
           if (chatItem.prompt) {
             setMessages((prev) => [
               ...prev,
               { from: "user", text: chatItem.prompt },
-            ])
+            ]);
           }
 
           if (chatItem.response) {
             setMessages((prev) => [
               ...prev,
               { from: "bot", text: chatItem.response },
-            ])
+            ]);
           }
         });
-      }
-      catch (e) {
-        console.log("e", e)
+      } catch (e) {
+        console.log("e", e);
       }
     }
 
-    fetchChats()
-  }, [isOpen])
-
+    fetchChats();
+  }, [isOpen]);
 
   const handleSend = () => {
     if (!input.trim()) return;
-    if (!stompRef.current) return
+    if (!stompRef.current) return;
 
     setMessages([...messages, { from: "user", text: input }]);
     setInput("");
 
     stompRef?.current?.publish({
       destination: "/app/chat",
-      body: JSON.stringify({ 'message': input })
+      body: JSON.stringify({ message: input }),
     });
     // setTimeout(() => {
     //   setMessages((prev) => [
@@ -190,7 +186,6 @@ const Chatbot = () => {
   //   })
   // }, [stompRef])
 
-
   // Scroll to bottom whenever messages update
   useEffect(() => {
     if (bodyRef.current) {
@@ -202,7 +197,10 @@ const Chatbot = () => {
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([
-        { from: "bot", text: "👋 Welcome to EduPortal! How can I help you today?" },
+        {
+          from: "bot",
+          text: "👋 Welcome to EduPortal! How can I help you today?",
+        },
       ]);
     }
   }, [isOpen]);
@@ -220,7 +218,6 @@ const Chatbot = () => {
       {/* Chat Window */}
       {isOpen && (
         <div className="fixed bottom-5 right-5 w-[400px] h-[580px] bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl flex flex-col z-50 transform transition-transform duration-300 animate-slideUp">
-
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold flex justify-between items-center p-4 rounded-t-3xl">
             Ask questions and get clear answers.
@@ -240,10 +237,11 @@ const Chatbot = () => {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`p-3 rounded-2xl max-w-[75%] break-words shadow-md ${msg.from === "user"
-                  ? "bg-gradient-to-r from-blue-200 to-blue-100 self-end text-right"
-                  : "bg-gray-200 self-start text-left"
-                  }`}
+                className={`p-3 rounded-2xl max-w-[75%] break-words shadow-md ${
+                  msg.from === "user"
+                    ? "bg-gradient-to-r from-blue-200 to-blue-100 self-end text-right"
+                    : "bg-gray-200 self-start text-left"
+                }`}
               >
                 {msg.text}
               </div>
