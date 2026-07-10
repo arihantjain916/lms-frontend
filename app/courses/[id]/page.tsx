@@ -78,7 +78,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     subtitle:
       "Become a Full-Stack Web Developer with just ONE course. HTML, CSS, Javascript, Node, React, MongoDB and more!",
     rating: 4.8,
-    reviews: 12547,
+    reviewCount: 12547,
     students: 245890,
     lastUpdated: "March 2024",
     language: "English",
@@ -746,7 +746,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   </div>
                   <span className="ml-2 font-medium">{formatRating(courseData.rating)}</span>
                   <Link href="#reviews" className="ml-2 text-blue-200 hover:text-white underline">
-                    ({courseData.reviews.toLocaleString()} reviews)
+                    ({courseData.reviewCount.toLocaleString()} reviews)
                   </Link>
                 </div>
                 <div className="flex items-center gap-1 text-blue-100">
@@ -1109,7 +1109,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                             ))}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Course Rating • {courseData.reviews.toLocaleString()} reviews
+                            Course Rating • {courseData.reviewCount.toLocaleString()} reviews
                           </div>
                         </div>
 

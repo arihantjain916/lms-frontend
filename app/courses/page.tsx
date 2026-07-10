@@ -59,7 +59,7 @@ export default function CoursesPage() {
     setLoading(true)
     setError("")
     try {
-      const response: any = await instance.get("/course")
+      const response: any = await instance.get("/courses", { params: { page: 1, limit: 50 } })
       setCourses(unwrapList<Course>(response))
     } catch {
       setError("We could not load the course catalog. Please try again.")
