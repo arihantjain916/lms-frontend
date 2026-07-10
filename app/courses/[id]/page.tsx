@@ -3,11 +3,12 @@
 import { FormEvent, useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import { BookOpen, CheckCircle2, ChevronLeft, Clock, GraduationCap, PlayCircle, Share2, Star, ThumbsDown, ThumbsUp, UserRound } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { Bookmark, BookmarkCheck, BookOpen, CheckCircle2, ChevronLeft, Clock, GraduationCap, PlayCircle, Share2, Star, ThumbsDown, ThumbsUp, UserRound } from "lucide-react"
 import toast from "react-hot-toast"
 import { addCourseReview, Course, CourseReview, getCourse, getCourseCurriculum, getCourseInstructor, getCourseReviews, getRelatedCourses, Instructor, Lesson } from "@/lib/course-api"
 import { useAuth } from "@/hooks/use-authenticated"
+import { addToWishlist, CourseProgress, createCertificate, createCheckout, enrollCourse, getCourseProgress, getMyEnrollment, getWishlist, removeFromWishlist, unenrollCourse } from "@/lib/learning-api"
 import CourseCard from "../course-card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -34,6 +35,7 @@ function Stars({ value, size = "h-4 w-4" }: { value: number; size?: string }) {
 
 export default function CourseDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [course, setCourse] = useState<Course | null>(null)
   const [lessons, setLessons] = useState<Lesson[]>([])
@@ -46,6 +48,10 @@ export default function CourseDetailPage() {
   const [rating, setRating] = useState("5")
   const [comment, setComment] = useState("")
   const [submittingReview, setSubmittingReview] = useState(false)
+  const [enrolled, setEnrolled] = useState(false)
+  const [wishlisted, setWishlisted] = useState(false)
+  const [courseProgress, setCourseProgress] = useState<CourseProgress | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   const loadReviews = useCallback(async () => {
     if (!id) return
@@ -76,6 +82,12 @@ export default function CourseDetailPage() {
 
   useEffect(() => { loadPage() }, [loadPage])
 
+  useEffect(() => {
+    if (!isAuthenticated || !id) { setEnrolled(false); setWishlisted(false); setCourseProgress(null); return }
+    getMyEnrollment(id).then(() => { setEnrolled(true); getCourseProgress(id).then(setCourseProgress).catch(() => setCourseProgress(null)) }).catch(() => { setEnrolled(false); setCourseProgress(null) })
+    getWishlist(1, 100).then((result) => setWishlisted(result.data.some((item) => String(item.course.id) === String(id)))).catch(() => setWishlisted(false))
+  }, [id, isAuthenticated])
+
   async function submitReview(event: FormEvent) {
     event.preventDefault()
     if (!isAuthenticated) return
@@ -89,6 +101,44 @@ export default function CourseDetailPage() {
 
   function share() {
     navigator.clipboard.writeText(window.location.href).then(() => toast.success("Course link copied"))
+  }
+
+  async function toggleWishlist() {
+    if (!isAuthenticated) return router.push("/login")
+    setActionLoading(true)
+    try {
+      if (wishlisted) await removeFromWishlist(id); else await addToWishlist(id)
+      setWishlisted(!wishlisted); toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist")
+    } catch (requestError: any) { toast.error(requestError?.message || "Unable to update wishlist") }
+    finally { setActionLoading(false) }
+  }
+
+  async function startCourse() {
+    if (!isAuthenticated) return router.push("/login")
+    if (enrolled) return router.push(`/courses/${id}/learn`)
+    setActionLoading(true)
+    try {
+      if (!course?.price) {
+        await enrollCourse(id); setEnrolled(true); toast.success("Enrollment successful"); router.push(`/courses/${id}/learn`)
+      } else {
+        const order = await createCheckout(id); router.push(`/orders/${order.id}`)
+      }
+    } catch (requestError: any) { toast.error(requestError?.message || "Unable to start this course") }
+    finally { setActionLoading(false) }
+  }
+
+  async function unenroll() {
+    setActionLoading(true)
+    try { await unenrollCourse(id); setEnrolled(false); setCourseProgress(null); toast.success("You have unenrolled") }
+    catch (requestError: any) { toast.error(requestError?.message || "Unable to unenroll") }
+    finally { setActionLoading(false) }
+  }
+
+  async function issueCertificate() {
+    setActionLoading(true)
+    try { const certificate = await createCertificate(id); router.push(`/certificates/${certificate.id}`) }
+    catch (requestError: any) { toast.error(requestError?.message || "Unable to issue certificate") }
+    finally { setActionLoading(false) }
   }
 
   if (loading) return <main className="container min-h-[70vh] py-12"><div className="h-[420px] animate-pulse rounded-2xl bg-muted" /><div className="mt-8 h-96 animate-pulse rounded-2xl bg-muted/60" /></main>
@@ -111,7 +161,7 @@ export default function CourseDetailPage() {
       </div>
     </div>
 
-    <aside><Card className="sticky top-24 shadow-lg"><CardContent className="p-6"><p className="text-sm text-muted-foreground">Course price</p><p className="mt-1 text-3xl font-bold">{formatPrice(course.price)}</p><Button asChild className="mt-6 w-full" size="lg"><Link href={`/courses/${course.id}/learn`}>{course.price ? "View learning content" : "Start learning"}</Link></Button><Button variant="outline" className="mt-3 w-full" onClick={share}><Share2 className="mr-2 h-4 w-4" />Share course</Button><div className="mt-6 space-y-3 border-t pt-5 text-sm"><p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />Access course curriculum</p><p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />Learn at your own pace</p><p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />Expert instructor</p></div></CardContent></Card></aside>
+    <aside><Card className="sticky top-24 shadow-lg"><CardContent className="p-6"><p className="text-sm text-muted-foreground">Course price</p><p className="mt-1 text-3xl font-bold">{formatPrice(course.price)}</p>{courseProgress && <div className="mt-5 rounded-lg bg-blue-50 p-4"><div className="flex justify-between text-sm"><span>Your progress</span><strong>{Math.round(courseProgress.progressPercent)}%</strong></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-blue-100"><div className="h-full bg-blue-600" style={{ width: `${courseProgress.progressPercent}%` }} /></div></div>}<Button className="mt-6 w-full" size="lg" onClick={startCourse} disabled={actionLoading}>{actionLoading ? "Please wait…" : enrolled ? "Continue learning" : course.price ? "Proceed to checkout" : "Enroll for free"}</Button><Button variant="outline" className="mt-3 w-full" onClick={toggleWishlist} disabled={actionLoading}>{wishlisted ? <BookmarkCheck className="mr-2 h-4 w-4" /> : <Bookmark className="mr-2 h-4 w-4" />}{wishlisted ? "Remove from wishlist" : "Add to wishlist"}</Button>{enrolled && <Button variant="ghost" className="mt-2 w-full text-red-600" onClick={unenroll} disabled={actionLoading}>Unenroll</Button>}{courseProgress?.isCompleted && <Button className="mt-3 w-full bg-green-600 hover:bg-green-700" onClick={issueCertificate} disabled={actionLoading}>Get certificate</Button>}<Button variant="ghost" className="mt-2 w-full" onClick={share}><Share2 className="mr-2 h-4 w-4" />Share course</Button><div className="mt-6 space-y-3 border-t pt-5 text-sm"><p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />Access course curriculum</p><p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />Learn at your own pace</p><p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />Expert instructor</p></div></CardContent></Card></aside>
     </section>
 
     {related.length > 0 && <section className="border-t bg-muted/20 py-12"><div className="container"><h2 className="text-2xl font-bold">Related courses</h2><p className="mt-1 text-muted-foreground">More courses from this category.</p><div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">{related.map((item) => <CourseCard key={item.id} course={item} />)}</div></div></section>}
