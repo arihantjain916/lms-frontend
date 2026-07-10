@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { GraduationCap, ChevronRight, Menu, X, Search, Bell, ArrowRight, Clock, CheckCircle2, LogOut, UserCircle } from "lucide-react"
+import { GraduationCap, ChevronRight, Menu, X, Search, Bell, ArrowRight, Clock, CheckCircle2, LogOut, UserCircle, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -268,6 +268,7 @@ export default function Header() {
           </div>}
           {isAuthenticated ? (
             <div className="hidden items-center gap-2 md:flex">
+              <Button asChild variant="ghost"><Link href="/my-learning"><BookOpen className="mr-2 h-4 w-4" />My learning</Link></Button>
               <Button asChild variant="outline" className="border-blue-200 hover:bg-blue-50 hover:text-blue-700">
                 <Link href="/account"><UserCircle className="mr-2 h-4 w-4" />{user?.name || "Account"}</Link>
               </Button>
@@ -365,7 +366,8 @@ export default function Header() {
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2 mt-2">
-                <Button asChild variant="outline" className="flex-1"><Link href="/account">My account</Link></Button>
+                <Button asChild variant="outline" className="flex-1"><Link href="/my-learning">My learning</Link></Button>
+                <Button asChild variant="outline" className="flex-1"><Link href="/account">Account</Link></Button>
                 <Button variant="destructive" className="flex-1" onClick={async () => { await logout(); window.location.href = "/" }}>Log out</Button>
               </div>
             ) : (

@@ -7,6 +7,14 @@ const instance = axios.create({
   withCredentials: true,
 });
 
+instance.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = window.localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 instance.interceptors.response.use(
   (response) => {
     return response.data;
@@ -27,8 +35,9 @@ instance.interceptors.response.use(
         if (token) localStorage.setItem("token", token);
         return instance(originalRequest);
       } catch (e: any) {
+        const hadToken = Boolean(localStorage.getItem("token"));
         localStorage.removeItem("token");
-        window.dispatchEvent(new Event("eduportal:auth-state-changed"));
+        if (hadToken) window.dispatchEvent(new Event("eduportal:auth-state-changed"));
         return Promise.reject(e);
       }
     }
