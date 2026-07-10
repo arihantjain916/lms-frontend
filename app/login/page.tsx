@@ -140,7 +140,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
-                  Email
+                  Email or username
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -148,7 +148,7 @@ export default function LoginPage() {
                     id="email"
                     name="email"
                     type="text"
-                    placeholder="name@example.com"
+                    placeholder="name@example.com or username"
                     className={`pl-10 ${errors.email
                         ? "border-red-500 focus-visible:ring-red-500"
                         : ""

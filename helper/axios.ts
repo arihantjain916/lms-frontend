@@ -2,7 +2,7 @@ import axios from "axios";
 
 const instance = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/`,
-  timeout: 1000,
+  timeout: 10000,
   headers: { "X-Custom-Header": "foobar" },
   withCredentials: true,
 });
@@ -14,9 +14,9 @@ instance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     if (
-      error.response.status === 401 &&
+      error.response?.status === 401 &&
       !originalRequest._retry &&
-      originalRequest.url !== "/auth/refresh"
+      !originalRequest.url?.includes("/auth/refresh")
     ) {
       originalRequest._retry = true;
       try {
@@ -24,7 +24,7 @@ instance.interceptors.response.use(
           withCredentials: true,
         });
         const token = res?.data?.data;
-        localStorage.setItem("token", token);
+        if (token) localStorage.setItem("token", token);
         return instance(originalRequest);
       } catch (e: any) {
         localStorage.removeItem("token");
@@ -32,7 +32,7 @@ instance.interceptors.response.use(
         return Promise.reject(e);
       }
     }
-    return error.response.data;
+    return Promise.reject(error.response?.data || error);
   }
 );
 export default instance;

@@ -1,203 +1,92 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { BookOpen, Clock, GraduationCap, Search, Star, Users } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { BookOpen, Search, SlidersHorizontal } from "lucide-react"
 import instance from "@/helper/axios"
+import { Course, getCourses, getFeaturedCourses } from "@/lib/course-api"
+import CourseCard from "./course-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-type Course = {
-  id: string | number
-  title: string
-  description?: string
-  image?: string
-  level?: string
-  duration?: string
-  lectures?: number
-  price?: number | string
-  discountPrice?: number | string
-  avgRating?: number
-  totalRating?: number
-  students?: number
-  isFeatured?: boolean
-  category?: { id?: string | number; name?: string } | string
-  user?: { name?: string }
-  instructor?: { name?: string }
-}
-
-type Category = { id: string | number; name: string }
-
-function unwrapList<T>(response: any): T[] {
-  const value = response?.data ?? response
-  if (Array.isArray(value)) return value
-  if (Array.isArray(value?.content)) return value.content
-  if (Array.isArray(value?.items)) return value.items
-  return []
-}
-
-function formatPrice(value?: number | string) {
-  if (value === undefined || value === null || value === "") return "Free"
-  if (typeof value === "string" && /[^0-9.]/.test(value)) return value
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value))
-}
+type Category = { id: string; name: string }
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [query, setQuery] = useState("")
-  const [category, setCategory] = useState("all")
-  const [sort, setSort] = useState("popular")
+  const [debouncedQuery, setDebouncedQuery] = useState("")
+  const [categoryId, setCategoryId] = useState("all")
+  const [level, setLevel] = useState("all")
+  const [price, setPrice] = useState("all")
+  const [rating, setRating] = useState("all")
+  const [featuredOnly, setFeaturedOnly] = useState(false)
+  const [sort, setSort] = useState("newest")
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => { setDebouncedQuery(query.trim()); setPage(1) }, 350)
+    return () => window.clearTimeout(timer)
+  }, [query])
+
   const loadCourses = useCallback(async () => {
-    setLoading(true)
-    setError("")
+    setLoading(true); setError("")
     try {
-      const response: any = await instance.get("/courses", { params: { page: 1, limit: 50 } })
-      setCourses(unwrapList<Course>(response))
-    } catch {
-      setError("We could not load the course catalog. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+      const result = await getCourses({
+        q: debouncedQuery || undefined,
+        categoryId: categoryId === "all" ? undefined : categoryId,
+        level: level === "all" ? undefined : level,
+        price: price === "all" ? undefined : price,
+        rating: rating === "all" ? undefined : Number(rating),
+        featured: featuredOnly || undefined,
+        sort,
+        page,
+        limit: 12,
+      })
+      setCourses(result.data); setTotalPages(result.totalPages); setTotalElements(result.totalElements)
+    } catch (requestError: any) {
+      setCourses([]); setError(requestError?.message || "We could not load the course catalog.")
+    } finally { setLoading(false) }
+  }, [categoryId, debouncedQuery, featuredOnly, level, page, price, rating, sort])
+
+  useEffect(() => { loadCourses() }, [loadCourses])
+  useEffect(() => {
+    getFeaturedCourses(3).then(setFeaturedCourses).catch(() => setFeaturedCourses([]))
+    instance.get("/category").then((response: any) => setCategories(Array.isArray(response?.data) ? response.data : [])).catch(() => setCategories([]))
   }, [])
 
-  useEffect(() => {
-    loadCourses()
-    instance
-      .get("/category")
-      .then((response: any) => setCategories(unwrapList<Category>(response)))
-      .catch(() => setCategories([]))
-  }, [loadCourses])
+  function resetFilters() {
+    setQuery(""); setDebouncedQuery(""); setCategoryId("all"); setLevel("all"); setPrice("all"); setRating("all"); setFeaturedOnly(false); setSort("newest"); setPage(1)
+  }
 
-  const visibleCourses = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
-    const filtered = courses.filter((course) => {
-      const categoryValue = typeof course.category === "string" ? course.category : String(course.category?.id ?? "")
-      const categoryName = typeof course.category === "string" ? course.category : course.category?.name ?? ""
-      const matchesCategory = category === "all" || categoryValue === category || categoryName === category
-      const matchesQuery =
-        !normalizedQuery ||
-        course.title.toLowerCase().includes(normalizedQuery) ||
-        course.description?.toLowerCase().includes(normalizedQuery) ||
-        categoryName.toLowerCase().includes(normalizedQuery)
-      return matchesCategory && matchesQuery
-    })
+  const filtersActive = Boolean(debouncedQuery || categoryId !== "all" || level !== "all" || price !== "all" || rating !== "all" || featuredOnly)
 
-    return [...filtered].sort((a, b) => {
-      if (sort === "rating") return (b.avgRating ?? 0) - (a.avgRating ?? 0)
-      if (sort === "newest") return Number(b.id) - Number(a.id)
-      if (sort === "price-low") return Number(a.discountPrice ?? a.price ?? 0) - Number(b.discountPrice ?? b.price ?? 0)
-      return (b.students ?? b.totalRating ?? 0) - (a.students ?? a.totalRating ?? 0)
-    })
-  }, [category, courses, query, sort])
+  return <main className="min-h-screen bg-background">
+    <section className="border-b bg-gradient-to-b from-blue-50 to-background py-14"><div className="container"><Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">Course catalog</Badge><h1 className="max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">Find the right course for your next goal</h1><p className="mt-4 max-w-2xl text-lg text-muted-foreground">Search the full catalog and filter by category, level, price, rating, or featured status.</p>
+      <div className="mt-8 rounded-xl border bg-white p-4 shadow-sm"><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search courses or skills" className="pl-9" /></div><div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <Select value={categoryId} onValueChange={(value) => { setCategoryId(value); setPage(1) }}><SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map((item) => <SelectItem key={item.id} value={String(item.id)}>{item.name}</SelectItem>)}</SelectContent></Select>
+        <Select value={level} onValueChange={(value) => { setLevel(value); setPage(1) }}><SelectTrigger><SelectValue placeholder="Level" /></SelectTrigger><SelectContent><SelectItem value="all">All levels</SelectItem><SelectItem value="BEGINNER">Beginner</SelectItem><SelectItem value="INTERMEDIATE">Intermediate</SelectItem><SelectItem value="ADVANCED">Advanced</SelectItem><SelectItem value="ALL_LEVELS">All levels courses</SelectItem></SelectContent></Select>
+        <Select value={price} onValueChange={(value) => { setPrice(value); setPage(1) }}><SelectTrigger><SelectValue placeholder="Price" /></SelectTrigger><SelectContent><SelectItem value="all">Any price</SelectItem><SelectItem value="free">Free</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="50">Under $50</SelectItem><SelectItem value="100">Under $100</SelectItem></SelectContent></Select>
+        <Select value={rating} onValueChange={(value) => { setRating(value); setPage(1) }}><SelectTrigger><SelectValue placeholder="Rating" /></SelectTrigger><SelectContent><SelectItem value="all">Any rating</SelectItem><SelectItem value="4">4.0 and above</SelectItem><SelectItem value="3">3.0 and above</SelectItem><SelectItem value="2">2.0 and above</SelectItem></SelectContent></Select>
+        <Select value={sort} onValueChange={(value) => { setSort(value); setPage(1) }}><SelectTrigger><SelectValue placeholder="Sort" /></SelectTrigger><SelectContent><SelectItem value="newest">Newest</SelectItem><SelectItem value="oldest">Oldest</SelectItem><SelectItem value="title">Title A–Z</SelectItem><SelectItem value="title-desc">Title Z–A</SelectItem></SelectContent></Select>
+      </div><div className="mt-4 flex flex-wrap items-center justify-between gap-3"><Label className="flex cursor-pointer items-center gap-2"><Checkbox checked={featuredOnly} onCheckedChange={(checked) => { setFeaturedOnly(checked === true); setPage(1) }} />Featured courses only</Label>{filtersActive && <Button variant="ghost" size="sm" onClick={resetFilters}>Clear filters</Button>}</div></div>
+    </div></section>
 
-  return (
-    <main className="min-h-screen bg-background">
-      <section className="border-b bg-gradient-to-b from-blue-50 to-background py-14">
-        <div className="container">
-          <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">Course catalog</Badge>
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">Find the right course for your next goal</h1>
-          <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            Explore expert-led courses, compare learning paths, and continue learning at your own pace.
-          </p>
-          <div className="mt-8 grid gap-3 rounded-xl border bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_180px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search courses or skills" className="pl-9" />
-            </div>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All categories</SelectItem>
-                {categories.map((item) => <SelectItem key={item.id} value={String(item.id)}>{item.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="popular">Most popular</SelectItem>
-                <SelectItem value="rating">Highest rated</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="price-low">Price: low to high</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </section>
+    {!filtersActive && page === 1 && featuredCourses.length > 0 && <section className="container pt-12"><div className="mb-6 flex items-center gap-2"><SlidersHorizontal className="h-5 w-5 text-blue-600" /><h2 className="text-2xl font-bold">Featured courses</h2></div><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{featuredCourses.map((course) => <CourseCard key={course.id} course={course} />)}</div></section>}
 
-      <section className="container py-12">
-        <div className="mb-7 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold">All courses</h2>
-            {!loading && !error && <p className="mt-1 text-sm text-muted-foreground">{visibleCourses.length} course{visibleCourses.length === 1 ? "" : "s"} found</p>}
-          </div>
-        </div>
-
-        {loading && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" aria-label="Loading courses">
-            {[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="h-[390px] animate-pulse rounded-xl border bg-muted/50" />)}
-          </div>
-        )}
-
-        {!loading && error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-10 text-center">
-            <h2 className="text-xl font-semibold">Course catalog unavailable</h2>
-            <p className="mt-2 text-muted-foreground">{error}</p>
-            <Button onClick={loadCourses} className="mt-5">Try again</Button>
-          </div>
-        )}
-
-        {!loading && !error && visibleCourses.length === 0 && (
-          <div className="rounded-xl border bg-muted/20 p-12 text-center">
-            <BookOpen className="mx-auto h-10 w-10 text-blue-600" />
-            <h2 className="mt-4 text-xl font-semibold">No courses found</h2>
-            <p className="mt-2 text-muted-foreground">Try a different search or category.</p>
-            <Button variant="outline" className="mt-5" onClick={() => { setQuery(""); setCategory("all") }}>Clear filters</Button>
-          </div>
-        )}
-
-        {!loading && !error && visibleCourses.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {visibleCourses.map((course) => {
-              const instructor = course.instructor?.name ?? course.user?.name ?? "EduPortal instructor"
-              const categoryName = typeof course.category === "string" ? course.category : course.category?.name
-              return (
-                <Card key={course.id} className="group flex h-full flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
-                  <Link href={`/courses/${course.id}`} className="relative block h-48 overflow-hidden bg-blue-50">
-                    <Image src={course.image || "/placeholder.svg"} alt={course.title} fill className="object-cover transition duration-300 group-hover:scale-105" />
-                    {course.isFeatured && <Badge className="absolute left-4 top-4 bg-blue-600">Featured</Badge>}
-                  </Link>
-                  <CardContent className="flex flex-1 flex-col p-6">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <Badge variant="outline">{categoryName || course.level || "Course"}</Badge>
-                      <span className="flex items-center gap-1 text-sm font-medium"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{Number(course.avgRating ?? 0).toFixed(1)}</span>
-                    </div>
-                    <Link href={`/courses/${course.id}`}><h3 className="line-clamp-2 text-xl font-semibold group-hover:text-blue-700">{course.title}</h3></Link>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{course.description || `Learn with ${instructor}.`}</p>
-                    <p className="mt-3 text-sm text-muted-foreground">By {instructor}</p>
-                    <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{course.duration || "Self-paced"}</span>
-                      <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" />{course.level || "All levels"}</span>
-                      {course.students !== undefined && <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{course.students.toLocaleString()}</span>}
-                    </div>
-                    <div className="mt-auto flex items-center justify-between border-t pt-5">
-                      <span className="text-lg font-bold text-blue-700">{formatPrice(course.discountPrice ?? course.price)}</span>
-                      <Button asChild size="sm"><Link href={`/courses/${course.id}`}>View course</Link></Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        )}
-      </section>
-    </main>
-  )
+    <section className="container py-12"><div className="mb-7"><h2 className="text-2xl font-bold">All courses</h2>{!loading && !error && <p className="mt-1 text-sm text-muted-foreground">{totalElements} course{totalElements === 1 ? "" : "s"} found</p>}</div>
+      {loading && <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" aria-label="Loading courses">{Array.from({ length: 6 }, (_, index) => <div key={index} className="h-[360px] animate-pulse rounded-xl border bg-muted/50" />)}</div>}
+      {!loading && error && <div className="rounded-xl border border-red-200 bg-red-50 p-10 text-center"><h2 className="text-xl font-semibold">Course catalog unavailable</h2><p className="mt-2 text-muted-foreground">{error}</p><Button onClick={loadCourses} className="mt-5">Try again</Button></div>}
+      {!loading && !error && courses.length === 0 && <div className="rounded-xl border bg-muted/20 p-12 text-center"><BookOpen className="mx-auto h-10 w-10 text-blue-600" /><h2 className="mt-4 text-xl font-semibold">No courses found</h2><p className="mt-2 text-muted-foreground">Try changing or clearing your filters.</p><Button variant="outline" className="mt-5" onClick={resetFilters}>Clear filters</Button></div>}
+      {!loading && !error && courses.length > 0 && <><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{courses.map((course) => <CourseCard key={course.id} course={course} />)}</div><div className="mt-10 flex items-center justify-center gap-3"><Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Previous</Button><span className="text-sm text-muted-foreground">Page {page} of {Math.max(totalPages, 1)}</span><Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Next</Button></div></>}
+    </section>
+  </main>
 }

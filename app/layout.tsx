@@ -6,6 +6,7 @@ import Header from "./header";
 import Footer from "./components/footer";
 import { Toaster } from "react-hot-toast";
 import AuthenticatedChatbot from "./components/authenticated-chatbot";
+import { AuthProvider } from "@/hooks/use-authenticated";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,11 +31,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Toaster />
-          <Header />
-          {children}
-          <AuthenticatedChatbot />
-          <Footer />
+          <AuthProvider>
+            <Toaster />
+            <Header />
+            {children}
+            <AuthenticatedChatbot />
+            <Footer />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

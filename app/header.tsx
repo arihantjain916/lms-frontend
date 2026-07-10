@@ -2,15 +2,15 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { GraduationCap, ChevronRight, Menu, X, Search, Bell, ArrowRight, Clock, CheckCircle2 } from "lucide-react"
+import { GraduationCap, ChevronRight, Menu, X, Search, Bell, ArrowRight, Clock, CheckCircle2, LogOut, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
-import { useAuthenticated } from "@/hooks/use-authenticated"
+import { useAuth } from "@/hooks/use-authenticated"
 
 export default function Header() {
-  const isAuthenticated = useAuthenticated()
+  const { isAuthenticated, user, logout } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
@@ -266,16 +266,21 @@ export default function Header() {
               </motion.div>
             )}
           </div>}
-          <Button
-            variant="outline"
-            className="hidden md:inline-flex border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-          >
-            <Link href="/login">Log In</Link>
-          </Button>
-
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Link href="/register">Sign Up</Link>
-          </Button>
+          {isAuthenticated ? (
+            <div className="hidden items-center gap-2 md:flex">
+              <Button asChild variant="outline" className="border-blue-200 hover:bg-blue-50 hover:text-blue-700">
+                <Link href="/account"><UserCircle className="mr-2 h-4 w-4" />{user?.name || "Account"}</Link>
+              </Button>
+              <Button variant="ghost" size="icon" title="Log out" onClick={async () => { await logout(); window.location.href = "/" }}>
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button asChild variant="outline" className="hidden md:inline-flex border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Link href="/login">Log In</Link></Button>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700"><Link href="/register">Sign Up</Link></Button>
+            </>
+          )}
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
@@ -358,12 +363,17 @@ export default function Header() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mt-2">
-              <Button variant="outline" className="flex-1 border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-                Log In
-              </Button>
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700">Sign Up</Button>
-            </div>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2 mt-2">
+                <Button asChild variant="outline" className="flex-1"><Link href="/account">My account</Link></Button>
+                <Button variant="destructive" className="flex-1" onClick={async () => { await logout(); window.location.href = "/" }}>Log out</Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mt-2">
+                <Button asChild variant="outline" className="flex-1 border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Link href="/login">Log In</Link></Button>
+                <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700"><Link href="/register">Sign Up</Link></Button>
+              </div>
+            )}
           </div>
         </motion.div>
       )}

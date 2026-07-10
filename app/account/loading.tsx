@@ -1,0 +1,1 @@
+export default function Loading() { return <main className="container min-h-[70vh] py-12"><div className="h-12 w-72 animate-pulse rounded bg-muted" /><div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]"><div className="h-80 animate-pulse rounded-xl bg-muted" /><div className="h-[600px] animate-pulse rounded-xl bg-muted" /></div></main> }
