@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Header from "./header";
 import Footer from "./components/footer";
 import { Toaster } from "react-hot-toast";
-import Chatbot from "./chatbot";
+import AuthenticatedChatbot from "./components/authenticated-chatbot";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,7 +33,7 @@ export default function RootLayout({
           <Toaster />
           <Header />
           {children}
-          <Chatbot/>
+          <AuthenticatedChatbot />
           <Footer />
         </ThemeProvider>
       </body>

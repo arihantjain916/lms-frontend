@@ -28,6 +28,7 @@ instance.interceptors.response.use(
         return instance(originalRequest);
       } catch (e: any) {
         localStorage.removeItem("token");
+        window.dispatchEvent(new Event("eduportal:auth-state-changed"));
         return Promise.reject(e);
       }
     }

@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
+import { useAuthenticated } from "@/hooks/use-authenticated"
 
 export default function Header() {
+  const isAuthenticated = useAuthenticated()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
@@ -185,7 +187,7 @@ export default function Header() {
           </form>
 
           {/* Notification Bell */}
-          <div className="relative" ref={notificationRef}>
+          {isAuthenticated && <div className="relative" ref={notificationRef}>
             <Button
               variant="ghost"
               size="icon"
@@ -263,7 +265,7 @@ export default function Header() {
                 </div>
               </motion.div>
             )}
-          </div>
+          </div>}
           <Button
             variant="outline"
             className="hidden md:inline-flex border-blue-200 hover:bg-blue-50 hover:text-blue-700"
@@ -295,7 +297,7 @@ export default function Header() {
               <Input type="search" name="q" placeholder="Search courses..." className="w-full pl-9 bg-muted" />
             </form>
 
-            <div className="border rounded-md overflow-hidden">
+            {isAuthenticated && <div className="border rounded-md overflow-hidden">
               <Link
                 href="/categories"
                 className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
@@ -321,7 +323,7 @@ export default function Header() {
               <Link href="#" className="block p-3 text-sm font-medium hover:bg-blue-50">
                 Contact
               </Link>
-            </div>
+            </div>}
 
             {/* Mobile Notifications */}
             <div className="border rounded-md overflow-hidden">

@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import instance from "@/helper/axios";
 import toast from "react-hot-toast";
+import { notifyAuthStateChanged } from "@/hooks/use-authenticated";
 
 export default function LoginPage() {
   // const { toast } = useToast();
@@ -90,6 +91,7 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("token", res?.token);
+      notifyAuthStateChanged();
 
       toast.success("Login successful");
 
