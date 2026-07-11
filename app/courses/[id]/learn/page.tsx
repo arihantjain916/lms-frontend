@@ -19,6 +19,7 @@ import {
   completeLesson,
   createCertificate,
   getLearningCourse,
+  getLesson,
   getLessonResources,
   getPlayback,
   getResourceDownload,
@@ -44,6 +45,7 @@ export default function CourseLearnPage() {
   );
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [resources, setResources] = useState<LessonResource[]>([]);
+  const [lessonDetails, setLessonDetails] = useState<LearningLesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [lessonLoading, setLessonLoading] = useState(false);
   const [error, setError] = useState("");
@@ -89,10 +91,12 @@ export default function CourseLearnPage() {
     Promise.all([
       getPlayback(currentLesson.id),
       getLessonResources(currentLesson.id),
+      getLesson(currentLesson.id),
     ])
-      .then(([playbackResult, resourceResult]) => {
+      .then(([playbackResult, resourceResult, detailResult]) => {
         setPlayback(playbackResult);
         setResources(resourceResult);
+        setLessonDetails(detailResult);
       })
       .catch((requestError: any) =>
         toast.error(requestError?.message || "Unable to load lesson"),
@@ -107,6 +111,7 @@ export default function CourseLearnPage() {
     setCurrentLesson(lesson);
     setPlayback(null);
     setResources([]);
+    setLessonDetails(null);
   }
 
   function saveWatchedTime() {
@@ -338,7 +343,7 @@ export default function CourseLearnPage() {
                   {currentLesson?.title || "Select a lesson"}
                 </h2>
                 <p className="mt-3 max-w-3xl leading-7 text-slate-300">
-                  {currentLesson?.description}
+                  {lessonDetails?.description || currentLesson?.description}
                 </p>
               </div>
               {currentLesson && (

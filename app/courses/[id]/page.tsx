@@ -17,7 +17,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { askCourseQuestion, getCourseQuestions, markQuestionHelpful, type CourseQuestion } from "@/lib/content-api"
+import { askCourseQuestion, getCourseQuestions, markQuestionHelpful, trackCourseView, type CourseQuestion } from "@/lib/content-api"
 
 function formatPrice(value?: number | null) {
   if (!value) return "Free"
@@ -88,6 +88,7 @@ export default function CourseDetailPage() {
   }, [id])
 
   useEffect(() => { loadPage(); loadQuestions() }, [loadPage, loadQuestions])
+  useEffect(() => { if (id) trackCourseView(id).catch(() => undefined) }, [id])
 
   async function submitQuestion(event: FormEvent) { event.preventDefault(); if (!isAuthenticated) return router.push("/login"); try { await askCourseQuestion(id, questionText.trim()); setQuestionText(""); await loadQuestions(); toast.success("Question posted") } catch (e: any) { toast.error(e?.message || "Unable to post question") } }
   async function helpful(questionId: string) { try { await markQuestionHelpful(questionId); await loadQuestions() } catch (e: any) { toast.error(e?.message || "Unable to update question") } }
@@ -178,5 +179,6 @@ export default function CourseDetailPage() {
 
     {related.length > 0 && <section className="border-t bg-muted/20 py-12"><div className="container"><h2 className="text-2xl font-bold">Related courses</h2><p className="mt-1 text-muted-foreground">More courses from this category.</p><div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">{related.map((item) => <CourseCard key={item.id} course={item} />)}</div></div></section>}
     {questionPages > 1 && <div className="container flex items-center justify-center gap-3 pb-12"><Button variant="outline" disabled={questionPage <= 1} onClick={() => setQuestionPage((value) => value - 1)}>Previous questions</Button><span className="text-sm text-muted-foreground">Question page {questionPage} of {questionPages}</span><Button variant="outline" disabled={questionPage >= questionPages} onClick={() => setQuestionPage((value) => value + 1)}>Next questions</Button></div>}
+    <div className="container pb-12 text-center"><Button asChild><Link href={`/courses/${id}/questions`}>Open full course discussion</Link></Button></div>
   </main>
 }

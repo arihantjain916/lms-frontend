@@ -18,9 +18,15 @@ export async function getPrograms(pageNumber = 1, limit = 50) {
 }
 
 export type CourseQuestion = { id: string; content: string; repliesCount?: number; helpfulCount?: number; createdAt?: string; user?: { id: string; name: string; username: string } }
+export type QuestionReply = { id: string; content: string; createdAt?: string; user?: { id: string; name: string; username: string } }
 export async function getCourseQuestions(courseId: string | number, pageNumber = 1, limit = 20) { return page<CourseQuestion>(await instance.get(`/courses/${courseId}/questions`, { params: { page: pageNumber, limit } })) }
 export async function askCourseQuestion(courseId: string | number, content: string) { return instance.post(`/courses/${courseId}/questions`, { content }) }
 export async function markQuestionHelpful(questionId: string) { return instance.post(`/questions/${questionId}/helpful`) }
 export async function unmarkQuestionHelpful(questionId: string) { return instance.delete(`/questions/${questionId}/helpful`) }
+export async function getQuestionReplies(questionId: string) { const response: any = await instance.get(`/questions/${questionId}/replies`); if (!response?.status) throw new Error(response?.message || "Unable to load replies"); return (response.data || []) as QuestionReply[] }
+export async function addQuestionReply(questionId: string, content: string) { const response: any = await instance.post(`/questions/${questionId}/replies`, { content }); if (!response?.status) throw new Error(response?.message || "Unable to add reply"); return response.data as QuestionReply }
+export async function updateCourseQuestion(questionId: string, content: string) { const response: any = await instance.patch(`/questions/${questionId}`, { content }); if (!response?.status) throw new Error(response?.message || "Unable to update question"); return response.data as CourseQuestion }
+export async function deleteCourseQuestion(questionId: string) { const response: any = await instance.delete(`/questions/${questionId}`); if (!response?.status) throw new Error(response?.message || "Unable to delete question") }
+export async function trackCourseView(courseId: string | number) { await instance.get(`/course/${courseId}/view`) }
 
 export async function getSearchSuggestions(q: string) { const response: any = await instance.get("/search/suggestions", { params: { q } }); return (response?.data || []) as { type: string; title: string; slug: string }[] }
