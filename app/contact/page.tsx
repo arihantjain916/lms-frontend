@@ -103,7 +103,7 @@ export default function ContactPage() {
      const res: any = await instance.post("/contact/save", formData)
 
       if (!res?.status) {
-        return toast.error(res?.message || "Message sent successfully")
+        return toast.error(res?.message || "Something went wrong")
       }
 
      toast.success("Message sent successfully")
@@ -117,8 +117,8 @@ export default function ContactPage() {
         department: "",
         phone:""
       })
-    } catch (error) {
-      toast.error("Something went wrong")
+    } catch (error: any) {
+      toast.error(error?.message || "Something went wrong")
     } finally {
       setIsSubmitting(false)
     }

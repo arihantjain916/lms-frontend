@@ -122,14 +122,14 @@ export default function RegisterPage() {
       });
 
       if (!res?.status) {
-        return toast.error(res?.message || "Login successful");
+        return toast.error(res?.message || "Something went wrong");
       }
 
       toast.success("User registered successfully. Please login.");
 
       router.push("/");
-    } catch (error) {
-      toast.error("Something went wrong");
+    } catch (error: any) {
+      toast.error(error?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }

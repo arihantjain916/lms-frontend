@@ -36,7 +36,7 @@ export default function LoginPage() {
     rememberMe: false,
   });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {}
+    {},
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +87,7 @@ export default function LoginPage() {
       });
 
       if (!res?.status) {
-        return toast.error(res?.message || "Login successful");
+        return toast.error(res?.message || "Something went wrong");
       }
 
       localStorage.setItem("token", res?.token);
@@ -96,8 +96,8 @@ export default function LoginPage() {
       toast.success("Login successful");
 
       router.push("/");
-    } catch (error) {
-      toast.error("Something went wrong");
+    } catch (error: any) {
+      toast.error(error?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
@@ -149,10 +149,11 @@ export default function LoginPage() {
                     name="email"
                     type="text"
                     placeholder="name@example.com or username"
-                    className={`pl-10 ${errors.email
+                    className={`pl-10 ${
+                      errors.email
                         ? "border-red-500 focus-visible:ring-red-500"
                         : ""
-                      }`}
+                    }`}
                     value={formData.email}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -185,10 +186,11 @@ export default function LoginPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`pl-10 ${errors.password
+                    className={`pl-10 ${
+                      errors.password
                         ? "border-red-500 focus-visible:ring-red-500"
                         : ""
-                      }`}
+                    }`}
                     value={formData.password}
                     onChange={handleChange}
                     disabled={isLoading}
