@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -31,12 +31,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useToast } from "@/hooks/use-toast"
+import { getPrograms } from "@/lib/content-api"
 
 export default function ProgramsPage() {
   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
+  const [apiPrograms, setApiPrograms] = useState<any[]>([])
 
   // Animation variants
   const fadeIn = {
@@ -73,7 +75,7 @@ export default function ProgramsPage() {
   }
 
   // Programs data
-  const programs = [
+  const samplePrograms = [
     {
       id: 1,
       title: "Full Stack Web Development Bootcamp",
@@ -218,6 +220,23 @@ export default function ProgramsPage() {
       skills: ["Python", "Programming Basics", "Data Types", "Functions", "Object-Oriented Programming"],
     },
   ]
+
+  useEffect(() => {
+    let active = true
+    getPrograms(1, 50).then((response) => {
+      if (!active) return
+      setApiPrograms(response.data.map((program, index) => ({
+        id: program.id, slug: program.slug, title: program.title, category: "program", description: program.description || "",
+        duration: program.durationWeeks ? `${program.durationWeeks} weeks` : "Flexible", schedule: "Flexible",
+        startDate: program.startDate ? new Date(program.startDate).toLocaleDateString(undefined, { dateStyle: "long" }) : "Contact us",
+        students: 0, rating: 0, reviews: 0, image: program.thumbnailUrl || "/placeholder.svg", featured: index < 3,
+        certificate: true, price: program.price == null ? "Contact us" : new Intl.NumberFormat(undefined, { style: "currency", currency: program.currency || "USD" }).format(program.price), skills: [],
+      })))
+    }).catch((error: any) => toast({ title: "Unable to load programs", description: error?.message || "Please try again.", variant: "destructive" }))
+    return () => { active = false }
+  }, [toast])
+
+  const programs = apiPrograms
 
   // Filter programs based on search and filters
   const filteredPrograms = programs.filter((program) => {
@@ -418,7 +437,7 @@ export default function ProgramsPage() {
                               </div>
                               <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{program.description}</p>
                               <div className="flex flex-wrap gap-2 mb-4">
-                                {program.skills.slice(0, 3).map((skill, idx) => (
+                                {program.skills.slice(0, 3).map((skill: string, idx: number) => (
                                   <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-600">
                                     {skill}
                                   </Badge>
@@ -580,7 +599,7 @@ export default function ProgramsPage() {
                                     {program.description}
                                   </p>
                                   <div className="flex flex-wrap gap-2 mb-4">
-                                    {program.skills.slice(0, 3).map((skill, idx) => (
+                                    {program.skills.slice(0, 3).map((skill: string, idx: number) => (
                                       <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-600">
                                         {skill}
                                       </Badge>
@@ -650,7 +669,7 @@ export default function ProgramsPage() {
                                     </div>
                                     <p className="text-muted-foreground text-sm mb-4">{program.description}</p>
                                     <div className="flex flex-wrap gap-2 mb-4">
-                                      {program.skills.map((skill, idx) => (
+                                      {program.skills.map((skill: string, idx: number) => (
                                         <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-600">
                                           {skill}
                                         </Badge>

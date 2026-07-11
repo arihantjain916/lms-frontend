@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { askCourseQuestion, getCourseQuestions, markQuestionHelpful, type CourseQuestion } from "@/lib/content-api"
 
 function formatPrice(value?: number | null) {
   if (!value) return "Free"
@@ -52,6 +53,10 @@ export default function CourseDetailPage() {
   const [wishlisted, setWishlisted] = useState(false)
   const [courseProgress, setCourseProgress] = useState<CourseProgress | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [questions, setQuestions] = useState<CourseQuestion[]>([])
+  const [questionText, setQuestionText] = useState("")
+
+  const loadQuestions = useCallback(async () => { if (!id) return; try { setQuestions((await getCourseQuestions(id)).data) } catch { setQuestions([]) } }, [id])
 
   const loadReviews = useCallback(async () => {
     if (!id) return
@@ -80,7 +85,10 @@ export default function CourseDetailPage() {
     } finally { setLoading(false) }
   }, [id])
 
-  useEffect(() => { loadPage() }, [loadPage])
+  useEffect(() => { loadPage(); loadQuestions() }, [loadPage, loadQuestions])
+
+  async function submitQuestion(event: FormEvent) { event.preventDefault(); if (!isAuthenticated) return router.push("/login"); try { await askCourseQuestion(id, questionText.trim()); setQuestionText(""); await loadQuestions(); toast.success("Question posted") } catch (e: any) { toast.error(e?.message || "Unable to post question") } }
+  async function helpful(questionId: string) { try { await markQuestionHelpful(questionId); await loadQuestions() } catch (e: any) { toast.error(e?.message || "Unable to update question") } }
 
   useEffect(() => {
     if (!isAuthenticated || !id) { setEnrolled(false); setWishlisted(false); setCourseProgress(null); return }
@@ -154,6 +162,8 @@ export default function CourseDetailPage() {
       <div><div className="flex items-end justify-between"><div><h2 className="text-2xl font-bold">Course curriculum</h2><p className="mt-1 text-sm text-muted-foreground">{lessons.length} lesson{lessons.length === 1 ? "" : "s"}</p></div></div><div className="mt-5 overflow-hidden rounded-xl border">{lessons.length ? lessons.map((lesson, index) => <div key={lesson.id} className="flex items-center justify-between gap-4 border-b p-4 last:border-0"><div className="flex min-w-0 items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-700">{index + 1}</div><div><p className="font-medium">{lesson.title}</p>{lesson.description && <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{lesson.description}</p>}</div></div><div className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">{lesson.time && <><Clock className="h-4 w-4" />{lesson.time}</>}{lesson.status && <Badge variant="outline" className="capitalize">{lesson.status.toLowerCase()}</Badge>}</div></div>) : <p className="p-8 text-center text-muted-foreground">Curriculum will be published soon.</p>}</div></div>
 
       {instructor && <Card><CardContent className="p-6"><h2 className="text-2xl font-bold">Your instructor</h2><div className="mt-5 flex gap-4"><Avatar className="h-20 w-20"><AvatarImage src={instructor.avatar || "/placeholder-user.jpg"} /><AvatarFallback className="text-xl">{instructor.name?.charAt(0) || "I"}</AvatarFallback></Avatar><div><h3 className="text-xl font-semibold">{instructor.name}</h3><p className="text-sm text-blue-700">@{instructor.username}</p><p className="mt-2 text-sm text-muted-foreground">Instructor for {instructor.totalCourses} course{instructor.totalCourses === 1 ? "" : "s"} on EduPortal.</p></div></div></CardContent></Card>}
+
+      <div><h2 className="text-2xl font-bold">Course questions</h2><p className="mt-1 text-sm text-muted-foreground">Ask the instructor or help another learner.</p>{enrolled && <Card className="mt-5"><CardContent className="p-5"><form onSubmit={submitQuestion}><Textarea value={questionText} onChange={(event) => setQuestionText(event.target.value)} required maxLength={2000} placeholder="Ask a question about this course" /><Button className="mt-3">Post question</Button></form></CardContent></Card>}<div className="mt-5 space-y-3">{questions.map((question) => <Card key={question.id}><CardContent className="p-5"><div className="flex justify-between gap-4"><div><p>{question.content}</p><p className="mt-2 text-xs text-muted-foreground">{question.user?.name || "Learner"} · {formatDate(question.createdAt)} · {question.repliesCount || 0} replies</p></div><Button variant="ghost" size="sm" onClick={() => helpful(question.id)}><ThumbsUp className="mr-1 h-4 w-4" />{question.helpfulCount || 0}</Button></div></CardContent></Card>)}{questions.length === 0 && <p className="rounded border p-6 text-center text-muted-foreground">No questions yet.</p>}</div></div>
 
       <div><div className="flex items-center justify-between"><div><h2 className="text-2xl font-bold">Student reviews</h2><p className="mt-1 text-sm text-muted-foreground">{reviewTotal} review{reviewTotal === 1 ? "" : "s"}</p></div><div className="text-right"><p className="text-3xl font-bold">{average.toFixed(1)}</p><Stars value={average} /></div></div>
         {isAuthenticated ? <Card className="mt-6"><CardContent className="p-5"><form onSubmit={submitReview} className="space-y-4"><div className="grid gap-4 sm:grid-cols-[150px_1fr]"><div className="space-y-2"><Label>Rating</Label><Select value={rating} onValueChange={setRating}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{[5, 4, 3, 2, 1, 0].map((value) => <SelectItem key={value} value={String(value)}>{value} star{value === 1 ? "" : "s"}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label htmlFor="comment">Review</Label><Textarea id="comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Share your experience with this course" /></div></div><Button disabled={submittingReview}>{submittingReview ? "Submitting…" : "Submit review"}</Button></form></CardContent></Card> : <div className="mt-6 rounded-lg border bg-blue-50 p-5 text-sm"><Link href={`/login`} className="font-medium text-blue-700 hover:underline">Sign in</Link> to review this course.</div>}

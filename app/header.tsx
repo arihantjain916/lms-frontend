@@ -8,11 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
 import { useAuth } from "@/hooks/use-authenticated"
+import { getSearchSuggestions } from "@/lib/content-api"
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [suggestions, setSuggestions] = useState<{ type: string; title: string; slug: string }[]>([])
   const notificationRef = useRef<HTMLDivElement>(null)
 
   // Close notifications when clicking outside
@@ -28,6 +31,13 @@ export default function Header() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [])
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) { setSuggestions([]); return }
+    let active = true
+    const timer = window.setTimeout(() => getSearchSuggestions(searchQuery.trim()).then((items) => { if (active) setSuggestions(items.slice(0, 8)) }).catch(() => { if (active) setSuggestions([]) }), 250)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [searchQuery])
 
   const notifications = [
     {
@@ -181,9 +191,12 @@ export default function Header() {
             <Input
               type="search"
               name="q"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search courses..."
               className="w-[200px] pl-9 rounded-full bg-muted focus-visible:ring-blue-500"
             />
+            {suggestions.length > 0 && <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-md border bg-background shadow-lg">{suggestions.map((item) => <Link key={`${item.type}-${item.slug}`} href={`/${item.type === "course" ? "courses" : item.type === "tutorial" ? "tutorials" : item.type === "webinar" ? "webinars" : "blog"}/${item.slug}`} onClick={() => setSuggestions([])} className="block border-b px-4 py-3 text-sm last:border-0 hover:bg-muted"><span className="mr-2 capitalize text-muted-foreground">{item.type}</span>{item.title}</Link>)}</div>}
           </form>
 
           {/* Notification Bell */}

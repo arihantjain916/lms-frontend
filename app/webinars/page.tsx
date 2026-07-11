@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   Search,
@@ -30,11 +31,14 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
+import { getWebinars, registerForWebinar } from "@/lib/catalog-api"
 
 export default function WebinarsPage() {
   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("upcoming")
+  const [apiWebinars, setApiWebinars] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   // Animation variants
   const fadeIn = {
@@ -57,15 +61,17 @@ export default function WebinarsPage() {
   }
 
   // Handle registration
-  const handleRegister = (webinarTitle: string) => {
-    toast({
-      title: "Registration Successful!",
-      description: `You have registered for "${webinarTitle}". Check your email for confirmation.`,
-    })
+  const handleRegister = async (webinarId: string, webinarTitle: string) => {
+    try {
+      await registerForWebinar(webinarId)
+      toast({ title: "Registration successful!", description: `You have registered for "${webinarTitle}".` })
+    } catch (error: any) {
+      toast({ title: "Registration failed", description: error?.message || "Please sign in and try again.", variant: "destructive" })
+    }
   }
 
   // Webinars data
-  const webinars = [
+  const fallbackWebinars = [
     {
       id: 1,
       title: "The Future of AI in Education",
@@ -275,6 +281,39 @@ export default function WebinarsPage() {
     },
   ]
 
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await getWebinars({ status: activeTab, q: searchQuery || undefined, limit: 50 })
+        if (active) setApiWebinars(response.data.map((webinar, index) => ({
+          id: webinar.id,
+          title: webinar.title,
+          slug: webinar.slug,
+          description: webinar.description || "",
+          image: webinar.thumbnailUrl || "/placeholder.svg",
+          date: new Date(webinar.scheduledAt).toLocaleDateString(undefined, { dateStyle: "long" }),
+          time: new Date(webinar.scheduledAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
+          duration: `${webinar.durationMinutes} minutes`,
+          status: webinar.status,
+          speakers: [{ name: webinar.host.name, role: `@${webinar.host.username}`, avatar: "/placeholder-user.jpg" }],
+          attendees: webinar.registrationCount,
+          category: webinar.categoryName || "General",
+          featured: index < 2,
+          free: true,
+          recording: webinar.recordingAvailable,
+          tags: [webinar.categoryName || "General"],
+        })))
+      } catch (error: any) {
+        if (active) toast({ title: "Unable to load webinars", description: error?.message || "Please try again.", variant: "destructive" })
+      } finally { if (active) setLoading(false) }
+    }, 250)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [activeTab, searchQuery, toast])
+
+  const webinars = apiWebinars
+
   // Filter webinars based on search and tab
   const filteredWebinars = webinars.filter((webinar) => {
     // Search filter
@@ -284,8 +323,8 @@ export default function WebinarsPage() {
         webinar.title.toLowerCase().includes(query) ||
         webinar.description.toLowerCase().includes(query) ||
         webinar.category.toLowerCase().includes(query) ||
-        webinar.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-        webinar.speakers.some((speaker) => speaker.name.toLowerCase().includes(query))
+        webinar.tags.some((tag: string) => tag.toLowerCase().includes(query)) ||
+        webinar.speakers.some((speaker: any) => speaker.name.toLowerCase().includes(query))
       )
     }
 
@@ -401,7 +440,7 @@ export default function WebinarsPage() {
                           <Badge variant="outline" className="mb-2">
                             {webinar.category}
                           </Badge>
-                          <h3 className="font-bold text-xl mb-2">{webinar.title}</h3>
+                          <h3 className="font-bold text-xl mb-2"><Link href={`/webinars/${webinar.slug}`} className="hover:text-blue-700">{webinar.title}</Link></h3>
                           <p className="text-muted-foreground text-sm mb-4">{webinar.description}</p>
                           <div className="flex flex-col gap-2 mb-4">
                             <div className="flex items-center gap-2 text-sm">
@@ -418,7 +457,7 @@ export default function WebinarsPage() {
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {webinar.speakers.map((speaker, index) => (
+                            {webinar.speakers.map((speaker: any, index: number) => (
                               <div key={index} className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                   <AvatarImage src={speaker.avatar || "/placeholder.svg"} alt={speaker.name} />
@@ -434,7 +473,7 @@ export default function WebinarsPage() {
                           {webinar.status === "upcoming" ? (
                             <Button
                               className="w-full gap-1 bg-blue-600 hover:bg-blue-700"
-                              onClick={() => handleRegister(webinar.title)}
+                              onClick={() => handleRegister(String(webinar.id), webinar.title)}
                             >
                               {webinar.free ? "Register Now" : `Register Now (${webinar.price})`}
                               <ChevronRight className="h-4 w-4" />
@@ -532,13 +571,13 @@ export default function WebinarsPage() {
                         <div className="p-6 flex-1">
                           <div className="flex flex-wrap gap-2 mb-2">
                             <Badge variant="outline">{webinar.category}</Badge>
-                            {webinar.tags.slice(0, 2).map((tag, index) => (
+                            {webinar.tags.slice(0, 2).map((tag: string, index: number) => (
                               <Badge key={index} variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
                                 {tag}
                               </Badge>
                             ))}
                           </div>
-                          <h3 className="font-bold text-xl mb-2">{webinar.title}</h3>
+                          <h3 className="font-bold text-xl mb-2"><Link href={`/webinars/${webinar.slug}`} className="hover:text-blue-700">{webinar.title}</Link></h3>
                           <p className="text-muted-foreground text-sm mb-4">{webinar.description}</p>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div className="flex items-center gap-2 text-sm">
@@ -556,7 +595,7 @@ export default function WebinarsPage() {
                           </div>
                           <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex flex-wrap gap-2">
-                              {webinar.speakers.map((speaker, index) => (
+                              {webinar.speakers.map((speaker: any, index: number) => (
                                 <div key={index} className="flex items-center gap-2">
                                   <Avatar className="h-8 w-8">
                                     <AvatarImage src={speaker.avatar || "/placeholder.svg"} alt={speaker.name} />
@@ -572,7 +611,7 @@ export default function WebinarsPage() {
                             {webinar.status === "upcoming" ? (
                               <Button
                                 className="gap-1 bg-blue-600 hover:bg-blue-700"
-                                onClick={() => handleRegister(webinar.title)}
+                                onClick={() => handleRegister(String(webinar.id), webinar.title)}
                               >
                                 {webinar.free ? "Register Now" : `Register Now (${webinar.price})`}
                                 <ChevronRight className="h-4 w-4" />
@@ -677,10 +716,7 @@ export default function WebinarsPage() {
                   </li>
                 ))}
               </ul>
-              <Button size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700">
-                Apply to Host
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              <Button asChild size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700"><Link href="/webinars/host">Apply to Host <ArrowRight className="h-4 w-4" /></Link></Button>
             </div>
             <div className="relative">
               <Image

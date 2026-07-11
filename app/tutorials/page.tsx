@@ -2,7 +2,7 @@
 
 import { Separator } from "@/components/ui/separator"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -34,12 +34,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getTutorials } from "@/lib/content-api"
 
 export default function TutorialsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
+  const [apiTutorials, setApiTutorials] = useState<any[]>([])
 
   // Animation variants
   const fadeIn = {
@@ -80,7 +82,7 @@ export default function TutorialsPage() {
   }
 
   // Tutorials data
-  const tutorials = [
+  const sampleTutorials = [
     {
       id: 1,
       title: "Introduction to HTML and CSS",
@@ -259,6 +261,25 @@ export default function TutorialsPage() {
     },
   ]
 
+  useEffect(() => {
+    let active = true
+    const timer = window.setTimeout(() => {
+      getTutorials({ q: searchQuery || undefined, limit: 50 }).then((response) => {
+        if (!active) return
+        setApiTutorials(response.data.map((tutorial, index) => ({
+          id: tutorial.id, title: tutorial.title, slug: tutorial.slug, description: tutorial.description || "",
+          image: tutorial.thumbnailUrl || "/placeholder.svg", duration: "Self-paced", level: tutorial.level?.toLowerCase() || "all-levels",
+          category: tutorial.categoryId || "general", instructor: { name: tutorial.author?.name || "EduPortal instructor", avatar: "/placeholder-user.jpg" },
+          rating: 0, reviews: 0, lessons: 1, progress: 0, free: true, certificate: false, featured: index < 3,
+          tags: [tutorial.categoryName, tutorial.level].filter(Boolean) as string[],
+        })))
+      }).catch(() => { if (active) setApiTutorials([]) })
+    }, 250)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [searchQuery])
+
+  const tutorials = apiTutorials
+
   // Filter tutorials based on search, filters, and tab
   const filteredTutorials = tutorials.filter((tutorial) => {
     // Search filter
@@ -267,7 +288,7 @@ export default function TutorialsPage() {
       return (
         tutorial.title.toLowerCase().includes(query) ||
         tutorial.description.toLowerCase().includes(query) ||
-        tutorial.tags.some((tag) => tag.toLowerCase().includes(query))
+        tutorial.tags.some((tag: string) => tag.toLowerCase().includes(query))
       )
     }
 
