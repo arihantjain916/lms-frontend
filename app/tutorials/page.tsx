@@ -42,6 +42,10 @@ export default function TutorialsPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
   const [apiTutorials, setApiTutorials] = useState<any[]>([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
 
   // Animation variants
   const fadeIn = {
@@ -264,7 +268,8 @@ export default function TutorialsPage() {
   useEffect(() => {
     let active = true
     const timer = window.setTimeout(() => {
-      getTutorials({ q: searchQuery || undefined, limit: 50 }).then((response) => {
+      setLoading(true); setLoadError("")
+      getTutorials({ q: searchQuery || undefined, page, limit: 12 }).then((response) => {
         if (!active) return
         setApiTutorials(response.data.map((tutorial, index) => ({
           id: tutorial.id, title: tutorial.title, slug: tutorial.slug, description: tutorial.description || "",
@@ -273,10 +278,11 @@ export default function TutorialsPage() {
           rating: 0, reviews: 0, lessons: 1, progress: 0, free: true, certificate: false, featured: index < 3,
           tags: [tutorial.categoryName, tutorial.level].filter(Boolean) as string[],
         })))
-      }).catch(() => { if (active) setApiTutorials([]) })
+        setTotalPages(Math.max(response.totalPages, 1))
+      }).catch((error: any) => { if (active) { setApiTutorials([]); setLoadError(error?.message || "Unable to load tutorials") } }).finally(() => { if (active) setLoading(false) })
     }, 250)
     return () => { active = false; window.clearTimeout(timer) }
-  }, [searchQuery])
+  }, [searchQuery, page])
 
   const tutorials = apiTutorials
 
@@ -642,7 +648,7 @@ export default function TutorialsPage() {
                     animate="visible"
                     variants={staggerContainer}
                   >
-                    {filteredTutorials.map((tutorial) => (
+                    {loading && <p className="col-span-full py-12 text-center text-muted-foreground">Loading tutorials…</p>}{loadError && <p className="col-span-full rounded border border-red-200 bg-red-50 p-6 text-center text-red-700">{loadError}</p>}{!loading && !loadError && filteredTutorials.length === 0 && <p className="col-span-full py-12 text-center text-muted-foreground">No tutorials found.</p>}{filteredTutorials.map((tutorial) => (
                       <motion.div key={tutorial.id} variants={fadeIn}>
                         <Link href={`/tutorials/${tutorial.slug}`}>
                           <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1 overflow-hidden">
@@ -736,7 +742,7 @@ export default function TutorialsPage() {
                 {filteredTutorials.length > 0 && (
                   <div className="flex justify-center mt-12">
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" disabled>
+                      <Button variant="outline" size="icon" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
@@ -754,15 +760,15 @@ export default function TutorialsPage() {
                         <span className="sr-only">Previous</span>
                       </Button>
                       <Button variant="outline" size="sm" className="bg-blue-50 text-blue-600">
-                        1
+                        {page} / {totalPages}
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="hidden">
                         2
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="hidden">
                         3
                       </Button>
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"

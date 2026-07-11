@@ -39,6 +39,10 @@ export default function ProgramsPage() {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [apiPrograms, setApiPrograms] = useState<any[]>([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
 
   // Animation variants
   const fadeIn = {
@@ -223,7 +227,8 @@ export default function ProgramsPage() {
 
   useEffect(() => {
     let active = true
-    getPrograms(1, 50).then((response) => {
+    setLoading(true); setLoadError("")
+    getPrograms(page, 12).then((response) => {
       if (!active) return
       setApiPrograms(response.data.map((program, index) => ({
         id: program.id, slug: program.slug, title: program.title, category: "program", description: program.description || "",
@@ -232,9 +237,10 @@ export default function ProgramsPage() {
         students: 0, rating: 0, reviews: 0, image: program.thumbnailUrl || "/placeholder.svg", featured: index < 3,
         certificate: true, price: program.price == null ? "Contact us" : new Intl.NumberFormat(undefined, { style: "currency", currency: program.currency || "USD" }).format(program.price), skills: [],
       })))
-    }).catch((error: any) => toast({ title: "Unable to load programs", description: error?.message || "Please try again.", variant: "destructive" }))
+      setTotalPages(Math.max(response.totalPages, 1))
+    }).catch((error: any) => { setLoadError(error?.message || "Unable to load programs"); toast({ title: "Unable to load programs", description: error?.message || "Please try again.", variant: "destructive" }) }).finally(() => setLoading(false))
     return () => { active = false }
-  }, [toast])
+  }, [page, toast])
 
   const programs = apiPrograms
 
@@ -570,7 +576,7 @@ export default function ProgramsPage() {
                         animate="visible"
                         variants={staggerContainer}
                       >
-                        {filteredPrograms.map((program) => (
+                        {loading && <p className="col-span-full py-12 text-center text-muted-foreground">Loading programs…</p>}{loadError && <p className="col-span-full rounded border border-red-200 bg-red-50 p-6 text-center text-red-700">{loadError}</p>}{!loading && !loadError && filteredPrograms.length === 0 && <p className="col-span-full py-12 text-center text-muted-foreground">No programs found.</p>}{filteredPrograms.map((program) => (
                           <motion.div key={program.id} variants={fadeIn}>
                             <Link href={`/programs/${program.id}`}>
                               <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1 overflow-hidden">
@@ -715,6 +721,7 @@ export default function ProgramsPage() {
               </div>
             </div>
           </div>
+          {totalPages > 1 && <div className="mt-10 flex items-center justify-center gap-3"><Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Previous</Button><span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span><Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Next</Button></div>}
         </div>
       </section>
 

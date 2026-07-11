@@ -55,8 +55,10 @@ export default function CourseDetailPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [questions, setQuestions] = useState<CourseQuestion[]>([])
   const [questionText, setQuestionText] = useState("")
+  const [questionPage, setQuestionPage] = useState(1)
+  const [questionPages, setQuestionPages] = useState(1)
 
-  const loadQuestions = useCallback(async () => { if (!id) return; try { setQuestions((await getCourseQuestions(id)).data) } catch { setQuestions([]) } }, [id])
+  const loadQuestions = useCallback(async () => { if (!id) return; try { const result = await getCourseQuestions(id, questionPage, 10); setQuestions(result.data); setQuestionPages(Math.max(result.totalPages, 1)) } catch { setQuestions([]) } }, [id, questionPage])
 
   const loadReviews = useCallback(async () => {
     if (!id) return
@@ -175,5 +177,6 @@ export default function CourseDetailPage() {
     </section>
 
     {related.length > 0 && <section className="border-t bg-muted/20 py-12"><div className="container"><h2 className="text-2xl font-bold">Related courses</h2><p className="mt-1 text-muted-foreground">More courses from this category.</p><div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">{related.map((item) => <CourseCard key={item.id} course={item} />)}</div></div></section>}
+    {questionPages > 1 && <div className="container flex items-center justify-center gap-3 pb-12"><Button variant="outline" disabled={questionPage <= 1} onClick={() => setQuestionPage((value) => value - 1)}>Previous questions</Button><span className="text-sm text-muted-foreground">Question page {questionPage} of {questionPages}</span><Button variant="outline" disabled={questionPage >= questionPages} onClick={() => setQuestionPage((value) => value + 1)}>Next questions</Button></div>}
   </main>
 }
