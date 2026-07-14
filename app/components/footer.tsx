@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import Link from "next/link"
+import Link from "next/link";
 import {
   GraduationCap,
   BookOpen,
@@ -23,24 +23,24 @@ import {
   Instagram,
   Linkedin,
   Youtube,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function Footer() {
-  const { toast } = useToast()
-  const [email, setEmail] = useState("")
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
 
   const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     toast({
       title: "Subscribed!",
       description: "Thank you for subscribing to our newsletter.",
-    })
-    setEmail("")
-  }
+    });
+    setEmail("");
+  };
 
   return (
     <footer className="bg-blue-50/50 border-t py-16 px-4">
@@ -54,8 +54,9 @@ export default function Footer() {
               <span className="text-2xl font-bold">EduPortal</span>
             </Link>
             <p className="text-muted-foreground mb-6 max-w-[400px]">
-              Empowering individuals to achieve their personal and professional goals through quality education and
-              lifelong learning opportunities.
+              Empowering individuals to achieve their personal and professional
+              goals through quality education and lifelong learning
+              opportunities.
             </p>
             <div className="flex gap-4">
               {[
@@ -101,11 +102,31 @@ export default function Footer() {
             <h3 className="font-bold text-lg mb-6 text-blue-800">Explore</h3>
             <ul className="space-y-4">
               {[
-                { icon: <BookOpen className="h-4 w-4" />, label: "Courses", href: "/categories" },
-                { icon: <GraduationCap className="h-4 w-4" />, label: "Programs", href: "/programs" },
-                { icon: <Users className="h-4 w-4" />, label: "Instructors", href: "#" },
-                { icon: <Calendar className="h-4 w-4" />, label: "Events", href: "#" },
-                { icon: <FileText className="h-4 w-4" />, label: "Resources", href: "#" },
+                {
+                  icon: <BookOpen className="h-4 w-4" />,
+                  label: "Courses",
+                  href: "/categories",
+                },
+                {
+                  icon: <GraduationCap className="h-4 w-4" />,
+                  label: "Programs",
+                  href: "/programs",
+                },
+                {
+                  icon: <Users className="h-4 w-4" />,
+                  label: "Instructors",
+                  href: "#",
+                },
+                {
+                  icon: <Calendar className="h-4 w-4" />,
+                  label: "Events",
+                  href: "#",
+                },
+                {
+                  icon: <FileText className="h-4 w-4" />,
+                  label: "Resources",
+                  href: "#",
+                },
               ].map((item, index) => (
                 <li key={index}>
                   <Link
@@ -121,13 +142,31 @@ export default function Footer() {
           </div>
 
           <div className="lg:col-span-2">
-            <h3 className="font-bold text-lg mb-6 text-blue-800">Information</h3>
+            <h3 className="font-bold text-lg mb-6 text-blue-800">
+              Information
+            </h3>
             <ul className="space-y-4">
               {[
-                { icon: <Info className="h-4 w-4" />, label: "About Us", href: "/about" },
-                { icon: <Briefcase className="h-4 w-4" />, label: "Careers", href: "#" },
-                { icon: <Newspaper className="h-4 w-4" />, label: "Press", href: "#" },
-                { icon: <Mail className="h-4 w-4" />, label: "Contact", href: "/contact" },
+                {
+                  icon: <Info className="h-4 w-4" />,
+                  label: "About Us",
+                  href: "/about",
+                },
+                {
+                  icon: <Briefcase className="h-4 w-4" />,
+                  label: "Careers",
+                  href: "#",
+                },
+                {
+                  icon: <Newspaper className="h-4 w-4" />,
+                  label: "Press",
+                  href: "#",
+                },
+                {
+                  icon: <Mail className="h-4 w-4" />,
+                  label: "Contact",
+                  href: "/contact",
+                },
               ].map((item, index) => (
                 <li key={index}>
                   <Link
@@ -146,11 +185,31 @@ export default function Footer() {
             <h3 className="font-bold text-lg mb-6 text-blue-800">Legal</h3>
             <ul className="space-y-4">
               {[
-                { icon: <FileText className="h-4 w-4" />, label: "Terms", href: "/terms" },
-                { icon: <Shield className="h-4 w-4" />, label: "Privacy", href: "/privacy" },
-                { icon: <Cookie className="h-4 w-4" />, label: "Cookies", href: "/cookies" },
-                { icon: <HelpCircle className="h-4 w-4" />, label: "Accessibility", href: "/accessibility" },
-                { icon: <LifeBuoy className="h-4 w-4" />, label: "Support", href: "#" },
+                {
+                  icon: <FileText className="h-4 w-4" />,
+                  label: "Terms",
+                  href: "/terms",
+                },
+                {
+                  icon: <Shield className="h-4 w-4" />,
+                  label: "Privacy",
+                  href: "/privacy",
+                },
+                {
+                  icon: <Cookie className="h-4 w-4" />,
+                  label: "Cookies",
+                  href: "/cookies",
+                },
+                {
+                  icon: <HelpCircle className="h-4 w-4" />,
+                  label: "Accessibility",
+                  href: "/accessibility",
+                },
+                {
+                  icon: <LifeBuoy className="h-4 w-4" />,
+                  label: "Support",
+                  href: "#",
+                },
               ].map((item, index) => (
                 <li key={index}>
                   <Link
@@ -167,7 +226,9 @@ export default function Footer() {
 
           <div className="lg:col-span-2">
             <h3 className="font-bold text-lg mb-6 text-blue-800">Newsletter</h3>
-            <p className="text-muted-foreground mb-4">Subscribe to get updates on new courses and features.</p>
+            <p className="text-muted-foreground mb-4">
+              Subscribe to get updates on new courses and features.
+            </p>
             <form onSubmit={handleSubscribe} className="space-y-3">
               <Input
                 type="email"
@@ -176,7 +237,10 @@ export default function Footer() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
                 Subscribe
               </Button>
             </form>
@@ -186,13 +250,22 @@ export default function Footer() {
         <div className="border-t pt-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col md:flex-row gap-4 md:gap-8">
-              <Link href="/terms" className="text-sm text-muted-foreground hover:text-blue-600 transition-colors">
+              <Link
+                href="/terms"
+                className="text-sm text-muted-foreground hover:text-blue-600 transition-colors"
+              >
                 Terms of Service
               </Link>
-              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-blue-600 transition-colors">
+              <Link
+                href="/privacy"
+                className="text-sm text-muted-foreground hover:text-blue-600 transition-colors"
+              >
                 Privacy Policy
               </Link>
-              <Link href="/cookies" className="text-sm text-muted-foreground hover:text-blue-600 transition-colors">
+              <Link
+                href="/cookies"
+                className="text-sm text-muted-foreground hover:text-blue-600 transition-colors"
+              >
                 Cookie Policy
               </Link>
               <Link
@@ -219,5 +292,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

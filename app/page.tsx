@@ -78,7 +78,7 @@ export default function HomePage() {
     async function handleFetchAllCategories() {
       try {
         const res: any = await instance.get("/category");
-        if(!res?.status){
+        if (!res?.status) {
           return toast.error("Something went wrong");
         }
         const topCategories = [...res?.data]

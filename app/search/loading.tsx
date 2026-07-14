@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Search } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search } from "lucide-react";
 
 export default function SearchLoading() {
   return (
@@ -65,5 +65,5 @@ export default function SearchLoading() {
         </div>
       </div>
     </div>
-  )
+  );
 }

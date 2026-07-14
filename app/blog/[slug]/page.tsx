@@ -78,8 +78,6 @@ export default function BlogDetailsPage() {
   useEffect(() => {
     if (!blog?.id) return;
 
-
-
     fetchComments(blog?.id);
   }, [blog?.id]);
 
@@ -124,15 +122,11 @@ export default function BlogDetailsPage() {
       {/* ================= HERO ================= */}
       <section className="border-b">
         <div className="container max-w-4xl py-16">
-          <Badge className="mb-4 bg-blue-600 text-white">
-            {blog.category}
-          </Badge>
+          <Badge className="mb-4 bg-blue-600 text-white">{blog.category}</Badge>
 
           <h1 className="text-4xl font-bold mb-4">{blog.title}</h1>
 
-          <p className="text-muted-foreground mb-6">
-            {blog.description}
-          </p>
+          <p className="text-muted-foreground mb-6">{blog.description}</p>
 
           <div className="flex gap-6 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
@@ -167,11 +161,10 @@ export default function BlogDetailsPage() {
 
       {/* ================= CONTENT ================= */}
       <section className="container max-w-4xl py-16">
-      <div
-  className="prose max-w-none"
-  dangerouslySetInnerHTML={{ __html: blog.content }}
-/>
-
+        <div
+          className="prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: blog.content }}
+        />
 
         {/* ================= AUTHOR ================= */}
         <Card className="mt-12">
@@ -224,24 +217,16 @@ export default function BlogDetailsPage() {
           </div>
 
           {commentsLoading && (
-            <p className="text-muted-foreground">
-              Loading comments...
-            </p>
+            <p className="text-muted-foreground">Loading comments...</p>
           )}
 
           {!commentsLoading && comments.length === 0 && (
-            <p className="text-muted-foreground">
-              No comments yet.
-            </p>
+            <p className="text-muted-foreground">No comments yet.</p>
           )}
 
           <div className="space-y-5">
             {comments.map((c) => (
-              <div
-                key={c.id}
-                className="flex gap-4 border p-4 rounded-lg"
-              >
-
+              <div key={c.id} className="flex gap-4 border p-4 rounded-lg">
                 <Avatar>
                   <AvatarFallback>
                     {c.user?.name?.charAt(0) ?? "U"}
@@ -249,17 +234,11 @@ export default function BlogDetailsPage() {
                 </Avatar>
 
                 <div>
-                  <p className="font-semibold">
-                    {c.user?.name ?? "Anonymous"}
-                  </p>
+                  <p className="font-semibold">{c.user?.name ?? "Anonymous"}</p>
                   <p className="text-xs text-muted-foreground">
-                    {c.createdAt
-                      ? new Date(c.createdAt).toDateString()
-                      : ""}
+                    {c.createdAt ? new Date(c.createdAt).toDateString() : ""}
                   </p>
-                  <p className="mt-1">
-                    {c.comment ?? ""}
-                  </p>
+                  <p className="mt-1">{c.comment ?? ""}</p>
                 </div>
               </div>
             ))}

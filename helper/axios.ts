@@ -28,20 +28,24 @@ instance.interceptors.response.use(
     ) {
       originalRequest._retry = true;
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/refresh`, {
-          withCredentials: true,
-        });
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/refresh`,
+          {
+            withCredentials: true,
+          },
+        );
         const token = res?.data?.data;
         if (token) localStorage.setItem("token", token);
         return instance(originalRequest);
       } catch (e: any) {
         const hadToken = Boolean(localStorage.getItem("token"));
         localStorage.removeItem("token");
-        if (hadToken) window.dispatchEvent(new Event("eduportal:auth-state-changed"));
+        if (hadToken)
+          window.dispatchEvent(new Event("eduportal:auth-state-changed"));
         return Promise.reject(e);
       }
     }
     return Promise.reject(error.response?.data || error);
-  }
+  },
 );
 export default instance;

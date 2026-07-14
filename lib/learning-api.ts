@@ -141,7 +141,9 @@ export async function getLearningCourse(courseId: number | string) {
 export async function getPlayback(lessonId: string) {
   return entity<Playback>(await instance.get(`/lessons/${lessonId}/playback`));
 }
-export async function getLesson(lessonId: string) { return entity<LearningLesson>(await instance.get(`/lessons/${lessonId}`)) }
+export async function getLesson(lessonId: string) {
+  return entity<LearningLesson>(await instance.get(`/lessons/${lessonId}`));
+}
 export async function updateProgress(lessonId: string, watchedSeconds: number) {
   return entity<Playback>(
     await instance.patch(`/lessons/${lessonId}/progress`, {

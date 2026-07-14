@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { motion } from "framer-motion"
+import { useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Mail,
   Phone,
@@ -20,93 +20,100 @@ import {
   Instagram,
   Linkedin,
   Youtube,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import instance from "@/helper/axios"
-import toast from "react-hot-toast"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import instance from "@/helper/axios";
+import toast from "react-hot-toast";
 
 export default function ContactPage() {
-  
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: "",
     department: "",
-    phone:""
-  })
-  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    phone: "",
+  });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error when user types
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
   const handleSelectChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, department: value }))
+    setFormData((prev) => ({ ...prev, department: value }));
     if (errors.department) {
-      setErrors((prev) => ({ ...prev, department: "" }))
+      setErrors((prev) => ({ ...prev, department: "" }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors: { [key: string]: string } = {}
+    const newErrors: { [key: string]: string } = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Name is required"
+      newErrors.name = "Name is required";
     }
 
     if (!formData.email) {
-      newErrors.email = "Email is required"
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address"
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.subject.trim()) {
-      newErrors.subject = "Subject is required"
+      newErrors.subject = "Subject is required";
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = "Message is required"
+      newErrors.message = "Message is required";
     } else if (formData.message.trim().length < 20) {
-      newErrors.message = "Message must be at least 20 characters"
+      newErrors.message = "Message must be at least 20 characters";
     }
 
     if (!formData.department) {
-      newErrors.department = "Please select a department"
+      newErrors.department = "Please select a department";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!validateForm()) return
+    if (!validateForm()) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     // Simulate API call
     try {
-     const res: any = await instance.post("/contact/save", formData)
+      const res: any = await instance.post("/contact/save", formData);
 
       if (!res?.status) {
-        return toast.error(res?.message || "Something went wrong")
+        return toast.error(res?.message || "Something went wrong");
       }
 
-     toast.success("Message sent successfully")
+      toast.success("Message sent successfully");
 
       // Reset form
       setFormData({
@@ -115,14 +122,14 @@ export default function ContactPage() {
         subject: "",
         message: "",
         department: "",
-        phone:""
-      })
+        phone: "",
+      });
     } catch (error: any) {
-      toast.error(error?.message || "Something went wrong")
+      toast.error(error?.message || "Something went wrong");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Animation variants
   const fadeIn = {
@@ -132,7 +139,7 @@ export default function ContactPage() {
       y: 0,
       transition: { duration: 0.5 },
     },
-  }
+  };
 
   const staggerContainer = {
     hidden: { opacity: 0 },
@@ -142,23 +149,31 @@ export default function ContactPage() {
         staggerChildren: 0.2,
       },
     },
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 to-background pt-24 pb-16">
         <div className="container relative">
-          <motion.div className="max-w-3xl mx-auto text-center" initial="hidden" animate="visible" variants={fadeIn}>
-            <Badge className="mb-4 mx-auto bg-blue-100 text-blue-700 hover:bg-blue-200" variant="secondary">
+          <motion.div
+            className="max-w-3xl mx-auto text-center"
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+          >
+            <Badge
+              className="mb-4 mx-auto bg-blue-100 text-blue-700 hover:bg-blue-200"
+              variant="secondary"
+            >
               Contact Us
             </Badge>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               Get in <span className="text-blue-600">Touch</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Have questions or feedback? We'd love to hear from you. Our team is here to help and respond as quickly as
-              possible.
+              Have questions or feedback? We'd love to hear from you. Our team
+              is here to help and respond as quickly as possible.
             </p>
           </motion.div>
         </div>
@@ -182,8 +197,13 @@ export default function ContactPage() {
                     <Mail className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Email Us</h3>
-                  <p className="text-muted-foreground mb-4">Our friendly team is here to help.</p>
-                  <Link href="mailto:hello@eduportal.com" className="text-blue-600 hover:underline font-medium">
+                  <p className="text-muted-foreground mb-4">
+                    Our friendly team is here to help.
+                  </p>
+                  <Link
+                    href="mailto:hello@eduportal.com"
+                    className="text-blue-600 hover:underline font-medium"
+                  >
                     hello@eduportal.com
                   </Link>
                 </CardContent>
@@ -197,7 +217,9 @@ export default function ContactPage() {
                     <MapPin className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Visit Us</h3>
-                  <p className="text-muted-foreground mb-4">Our office is open Monday to Friday, 9am to 5pm.</p>
+                  <p className="text-muted-foreground mb-4">
+                    Our office is open Monday to Friday, 9am to 5pm.
+                  </p>
                   <address className="not-italic text-blue-600">
                     123 Main Street
                     <br />
@@ -216,8 +238,13 @@ export default function ContactPage() {
                     <Phone className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Call Us</h3>
-                  <p className="text-muted-foreground mb-4">Mon-Fri from 8am to 5pm.</p>
-                  <Link href="tel:+1-555-123-4567" className="text-blue-600 hover:underline font-medium">
+                  <p className="text-muted-foreground mb-4">
+                    Mon-Fri from 8am to 5pm.
+                  </p>
+                  <Link
+                    href="tel:+1-555-123-4567"
+                    className="text-blue-600 hover:underline font-medium"
+                  >
                     +919672670732
                   </Link>
                 </CardContent>
@@ -239,8 +266,9 @@ export default function ContactPage() {
             >
               <h2 className="text-3xl font-bold mb-6">Send Us a Message</h2>
               <p className="text-muted-foreground mb-8">
-                Fill out the form below and we'll get back to you as soon as possible. We value your feedback and are
-                committed to providing excellent support.
+                Fill out the form below and we'll get back to you as soon as
+                possible. We value your feedback and are committed to providing
+                excellent support.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -322,8 +350,18 @@ export default function ContactPage() {
                   <label htmlFor="department" className="text-sm font-medium">
                     Department
                   </label>
-                  <Select value={formData.department} onValueChange={handleSelectChange} disabled={isSubmitting}>
-                    <SelectTrigger className={errors.department ? "border-red-500 focus-visible:ring-red-500" : ""}>
+                  <Select
+                    value={formData.department}
+                    onValueChange={handleSelectChange}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger
+                      className={
+                        errors.department
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }
+                    >
                       <SelectValue placeholder="Select a department" />
                     </SelectTrigger>
                     <SelectContent>
@@ -350,7 +388,11 @@ export default function ContactPage() {
                     id="subject"
                     name="subject"
                     placeholder="How can we help you?"
-                    className={errors.subject ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    className={
+                      errors.subject
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }
                     value={formData.subject}
                     onChange={handleChange}
                     disabled={isSubmitting}
@@ -384,7 +426,11 @@ export default function ContactPage() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full gap-2 bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? "Sending..." : "Send Message"}
                   {!isSubmitting && <Send className="h-4 w-4" />}
                 </Button>
@@ -399,7 +445,9 @@ export default function ContactPage() {
               className="space-y-8"
             >
               <div>
-                <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
+                <h2 className="text-3xl font-bold mb-6">
+                  Frequently Asked Questions
+                </h2>
                 <div className="space-y-6">
                   {[
                     {
@@ -425,7 +473,9 @@ export default function ContactPage() {
                       <div className="flex-shrink-0 mt-1">{faq.icon}</div>
                       <div>
                         <h3 className="font-semibold mb-2">{faq.question}</h3>
-                        <p className="text-muted-foreground text-sm">{faq.answer}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {faq.answer}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -438,11 +488,31 @@ export default function ContactPage() {
                 <h3 className="font-semibold mb-4">Connect With Us</h3>
                 <div className="flex gap-4">
                   {[
-                    { icon: <Twitter className="h-5 w-5" />, label: "Twitter", href: "#" },
-                    { icon: <Facebook className="h-5 w-5" />, label: "Facebook", href: "#" },
-                    { icon: <Instagram className="h-5 w-5" />, label: "Instagram", href: "#" },
-                    { icon: <Linkedin className="h-5 w-5" />, label: "LinkedIn", href: "#" },
-                    { icon: <Youtube className="h-5 w-5" />, label: "YouTube", href: "#" },
+                    {
+                      icon: <Twitter className="h-5 w-5" />,
+                      label: "Twitter",
+                      href: "#",
+                    },
+                    {
+                      icon: <Facebook className="h-5 w-5" />,
+                      label: "Facebook",
+                      href: "#",
+                    },
+                    {
+                      icon: <Instagram className="h-5 w-5" />,
+                      label: "Instagram",
+                      href: "#",
+                    },
+                    {
+                      icon: <Linkedin className="h-5 w-5" />,
+                      label: "LinkedIn",
+                      href: "#",
+                    },
+                    {
+                      icon: <Youtube className="h-5 w-5" />,
+                      label: "YouTube",
+                      href: "#",
+                    },
                   ].map((social, index) => (
                     <Link
                       key={index}
@@ -464,7 +534,8 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold mb-2">Live Chat Support</h3>
                     <p className="text-muted-foreground text-sm mb-4">
-                      Need immediate assistance? Our live chat support is available Monday to Friday, 9am to 5pm IST.
+                      Need immediate assistance? Our live chat support is
+                      available Monday to Friday, 9am to 5pm IST.
                     </p>
                     <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
                       Start Live Chat
@@ -478,7 +549,9 @@ export default function ContactPage() {
                 <h3 className="font-semibold mb-4">Business Hours</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Monday - Friday:</span>
+                    <span className="text-muted-foreground">
+                      Monday - Friday:
+                    </span>
                     <span>9:00 AM - 5:00 PM IST</span>
                   </div>
                   <div className="flex justify-between">
@@ -509,7 +582,9 @@ export default function ContactPage() {
           <div className="aspect-video w-full rounded-lg overflow-hidden border shadow-md">
             {/* This would be replaced with an actual map component in production */}
             <div className="w-full h-full bg-muted flex items-center justify-center">
-              <p className="text-muted-foreground">Interactive Map Would Be Displayed Here</p>
+              <p className="text-muted-foreground">
+                Interactive Map Would Be Displayed Here
+              </p>
             </div>
           </div>
         </div>
@@ -519,15 +594,26 @@ export default function ContactPage() {
       <section className="py-16 bg-blue-600 text-white">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Start Your Learning Journey?</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to Start Your Learning Journey?
+            </h2>
             <p className="text-blue-100 mb-8">
-              Join thousands of students already learning on our platform. Get started today!
+              Join thousands of students already learning on our platform. Get
+              started today!
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" variant="secondary" className="gap-2 bg-white text-blue-600 hover:bg-blue-50">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="gap-2 bg-white text-blue-600 hover:bg-blue-50"
+              >
                 Browse Courses
               </Button>
-              <Button size="lg" variant="outline" className="gap-2 border-white text-white hover:bg-blue-500">
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 border-white text-white hover:bg-blue-500"
+              >
                 Learn More
               </Button>
             </div>
@@ -535,5 +621,5 @@ export default function ContactPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

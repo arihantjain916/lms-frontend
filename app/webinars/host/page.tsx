@@ -1,10 +1,78 @@
-"use client"
-import { FormEvent, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { applyToHostWebinar } from "@/lib/catalog-api"
-import { useToast } from "@/hooks/use-toast"
-export default function HostWebinarPage() { const { toast } = useToast(); const [form, setForm] = useState({ name: "", email: "", topic: "", message: "" }); const [loading, setLoading] = useState(false); async function submit(event: FormEvent) { event.preventDefault(); setLoading(true); try { await applyToHostWebinar(form); setForm({ name: "", email: "", topic: "", message: "" }); toast({ title: "Application submitted" }) } catch (e: any) { toast({ title: "Unable to submit", description: e?.message, variant: "destructive" }) } finally { setLoading(false) } } return <main className="container max-w-2xl py-10"><h1 className="text-3xl font-bold">Apply to host a webinar</h1><p className="mt-2 text-muted-foreground">Tell us what you would like to teach the community.</p><Card className="mt-7"><CardContent className="p-6"><form onSubmit={submit} className="space-y-4">{(["name", "email", "topic"] as const).map((field) => <div key={field}><Label htmlFor={field} className="capitalize">{field}</Label><Input id={field} type={field === "email" ? "email" : "text"} required value={form[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })} /></div>)}<div><Label htmlFor="message">Message</Label><Textarea id="message" required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div><Button disabled={loading}>{loading ? "Submitting…" : "Submit application"}</Button></form></CardContent></Card></main> }
+"use client";
+import { FormEvent, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { applyToHostWebinar } from "@/lib/catalog-api";
+import { useToast } from "@/hooks/use-toast";
+export default function HostWebinarPage() {
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    topic: "",
+    message: "",
+  });
+  const [loading, setLoading] = useState(false);
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      await applyToHostWebinar(form);
+      setForm({ name: "", email: "", topic: "", message: "" });
+      toast({ title: "Application submitted" });
+    } catch (e: any) {
+      toast({
+        title: "Unable to submit",
+        description: e?.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <main className="container max-w-2xl py-10">
+      <h1 className="text-3xl font-bold">Apply to host a webinar</h1>
+      <p className="mt-2 text-muted-foreground">
+        Tell us what you would like to teach the community.
+      </p>
+      <Card className="mt-7">
+        <CardContent className="p-6">
+          <form onSubmit={submit} className="space-y-4">
+            {(["name", "email", "topic"] as const).map((field) => (
+              <div key={field}>
+                <Label htmlFor={field} className="capitalize">
+                  {field}
+                </Label>
+                <Input
+                  id={field}
+                  type={field === "email" ? "email" : "text"}
+                  required
+                  value={form[field]}
+                  onChange={(e) =>
+                    setForm({ ...form, [field]: e.target.value })
+                  }
+                />
+              </div>
+            ))}
+            <div>
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                required
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+              />
+            </div>
+            <Button disabled={loading}>
+              {loading ? "Submitting…" : "Submit application"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}

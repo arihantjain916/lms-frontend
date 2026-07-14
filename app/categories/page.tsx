@@ -369,7 +369,7 @@ export default function CategoriesPage() {
     setSelectedFilters((prev) =>
       prev.includes(filterId)
         ? prev.filter((id) => id !== filterId)
-        : [...prev, filterId]
+        : [...prev, filterId],
     );
   };
 
@@ -383,7 +383,7 @@ export default function CategoriesPage() {
           category.title.toLowerCase().includes(query) ||
           category.description.toLowerCase().includes(query) ||
           category.subcategories.some((sub: any) =>
-            sub.toLowerCase().includes(query)
+            sub.toLowerCase().includes(query),
           )
         );
       }
@@ -413,7 +413,7 @@ export default function CategoriesPage() {
 
   // Featured categories
   const featuredCategories = allCategories.filter(
-    (category) => category.isFeatured
+    (category) => category.isFeatured,
   );
 
   return (
@@ -673,8 +673,8 @@ export default function CategoriesPage() {
                     {searchQuery
                       ? `Search Results (${sortedCategories.length})`
                       : selectedFilters.length > 0
-                      ? `Filtered Categories (${sortedCategories.length})`
-                      : "All Categories"}
+                        ? `Filtered Categories (${sortedCategories.length})`
+                        : "All Categories"}
                   </h2>
                   {(searchQuery || selectedFilters.length > 0) && (
                     <Button

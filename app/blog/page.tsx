@@ -76,7 +76,7 @@ export default function BlogPage() {
     async function handleGetAllBlogs() {
       try {
         const res: any = await instance.get(
-          `/blog?page=${page}&category=${filter}`
+          `/blog?page=${page}&category=${filter}`,
         );
         if (!res?.status) {
           return toast.error("Something went wrong");
@@ -93,7 +93,7 @@ export default function BlogPage() {
 
   useEffect(() => {
     console.log("blogs", blogs);
-  }, [blogs])
+  }, [blogs]);
   // Blog posts data
   const blogPosts = [
     {
@@ -313,10 +313,11 @@ export default function BlogPage() {
                 <Badge
                   key={category.id}
                   variant={filter === category.id ? "default" : "outline"}
-                  className={`cursor-pointer whitespace-nowrap ${filter === category.id
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "hover:bg-blue-50"
-                    }`}
+                  className={`cursor-pointer whitespace-nowrap ${
+                    filter === category.id
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "hover:bg-blue-50"
+                  }`}
                   onClick={() => {
                     setActiveCategory(category.id);
                     setFilter(category.id);
@@ -378,8 +379,9 @@ export default function BlogPage() {
                             </div>
                           </div>
                           <h3
-                            className={`font-bold mb-2 line-clamp-2 ${index === 0 ? "text-2xl" : "text-xl"
-                              }`}
+                            className={`font-bold mb-2 line-clamp-2 ${
+                              index === 0 ? "text-2xl" : "text-xl"
+                            }`}
                           >
                             {post?.title}
                           </h3>
@@ -421,8 +423,9 @@ export default function BlogPage() {
                 {filter
                   ? `Search Results (${blogs?.length})`
                   : activeCategory !== "all"
-                    ? `${categories.find((c) => c.id === activeCategory)?.name
-                    } (${blogs?.length})`
+                    ? `${
+                        categories.find((c) => c.id === activeCategory)?.name
+                      } (${blogs?.length})`
                     : "All Articles"}
               </h2>
               {filter && (
@@ -590,8 +593,9 @@ export default function BlogPage() {
               {Array.from({ length: totalPages }).map((_, index) => (
                 <div
                   key={index}
-                  className={`border p-3 rounded-md ${page === index + 1 ? "bg-blue-600 text-white" : ""
-                    }`}
+                  className={`border p-3 rounded-md ${
+                    page === index + 1 ? "bg-blue-600 text-white" : ""
+                  }`}
                 >
                   <button
                     onClick={() => {

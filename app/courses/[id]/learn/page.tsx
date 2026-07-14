@@ -45,7 +45,9 @@ export default function CourseLearnPage() {
   );
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [resources, setResources] = useState<LessonResource[]>([]);
-  const [lessonDetails, setLessonDetails] = useState<LearningLesson | null>(null);
+  const [lessonDetails, setLessonDetails] = useState<LearningLesson | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [lessonLoading, setLessonLoading] = useState(false);
   const [error, setError] = useState("");

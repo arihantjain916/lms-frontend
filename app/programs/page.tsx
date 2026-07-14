@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Award,
   Clock,
@@ -15,34 +15,34 @@ import {
   ArrowRight,
   CheckCircle,
   Star,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { useToast } from "@/hooks/use-toast"
-import { getPrograms } from "@/lib/content-api"
+} from "@/components/ui/breadcrumb";
+import { useToast } from "@/hooks/use-toast";
+import { getPrograms } from "@/lib/content-api";
 
 export default function ProgramsPage() {
-  const { toast } = useToast()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
-  const [showFilters, setShowFilters] = useState(false)
-  const [apiPrograms, setApiPrograms] = useState<any[]>([])
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState("")
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [apiPrograms, setApiPrograms] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // Animation variants
   const fadeIn = {
@@ -52,7 +52,7 @@ export default function ProgramsPage() {
       y: 0,
       transition: { duration: 0.5 },
     },
-  }
+  };
 
   const staggerContainer = {
     hidden: { opacity: 0 },
@@ -62,7 +62,7 @@ export default function ProgramsPage() {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   // Filter options
   const filterOptions = [
@@ -71,12 +71,16 @@ export default function ProgramsPage() {
     { id: "professional", label: "Professional Training" },
     { id: "bootcamp", label: "Bootcamps" },
     { id: "self-paced", label: "Self-Paced Learning" },
-  ]
+  ];
 
   // Toggle filter selection
   const toggleFilter = (filterId: string) => {
-    setSelectedFilters((prev) => (prev.includes(filterId) ? prev.filter((id) => id !== filterId) : [...prev, filterId]))
-  }
+    setSelectedFilters((prev) =>
+      prev.includes(filterId)
+        ? prev.filter((id) => id !== filterId)
+        : [...prev, filterId],
+    );
+  };
 
   // Programs data
   const samplePrograms = [
@@ -96,7 +100,14 @@ export default function ProgramsPage() {
       featured: true,
       certificate: true,
       price: "$8,995",
-      skills: ["HTML/CSS", "JavaScript", "React", "Node.js", "MongoDB", "Express"],
+      skills: [
+        "HTML/CSS",
+        "JavaScript",
+        "React",
+        "Node.js",
+        "MongoDB",
+        "Express",
+      ],
     },
     {
       id: 2,
@@ -114,7 +125,14 @@ export default function ProgramsPage() {
       featured: true,
       certificate: true,
       price: "$2,495",
-      skills: ["Python", "Statistics", "Data Visualization", "Machine Learning", "SQL", "Data Analysis"],
+      skills: [
+        "Python",
+        "Statistics",
+        "Data Visualization",
+        "Machine Learning",
+        "SQL",
+        "Data Analysis",
+      ],
     },
     {
       id: 3,
@@ -132,7 +150,13 @@ export default function ProgramsPage() {
       featured: false,
       certificate: false,
       price: "$15,000/year",
-      skills: ["Programming", "Algorithms", "Data Structures", "Software Engineering", "Computer Architecture"],
+      skills: [
+        "Programming",
+        "Algorithms",
+        "Data Structures",
+        "Software Engineering",
+        "Computer Architecture",
+      ],
     },
     {
       id: 4,
@@ -150,7 +174,14 @@ export default function ProgramsPage() {
       featured: false,
       certificate: true,
       price: "$3,495",
-      skills: ["UI Design", "UX Research", "Wireframing", "Prototyping", "Figma", "User Testing"],
+      skills: [
+        "UI Design",
+        "UX Research",
+        "Wireframing",
+        "Prototyping",
+        "Figma",
+        "User Testing",
+      ],
     },
     {
       id: 5,
@@ -168,7 +199,13 @@ export default function ProgramsPage() {
       featured: true,
       certificate: true,
       price: "$1,995",
-      skills: ["SEO", "Social Media Marketing", "Content Marketing", "Google Analytics", "Email Marketing"],
+      skills: [
+        "SEO",
+        "Social Media Marketing",
+        "Content Marketing",
+        "Google Analytics",
+        "Email Marketing",
+      ],
     },
     {
       id: 6,
@@ -186,7 +223,13 @@ export default function ProgramsPage() {
       featured: false,
       certificate: false,
       price: "$25,000/year",
-      skills: ["Leadership", "Finance", "Marketing", "Strategy", "Operations Management"],
+      skills: [
+        "Leadership",
+        "Finance",
+        "Marketing",
+        "Strategy",
+        "Operations Management",
+      ],
     },
     {
       id: 7,
@@ -204,13 +247,20 @@ export default function ProgramsPage() {
       featured: true,
       certificate: true,
       price: "$9,995",
-      skills: ["Network Security", "Ethical Hacking", "Security Operations", "Cryptography", "Risk Management"],
+      skills: [
+        "Network Security",
+        "Ethical Hacking",
+        "Security Operations",
+        "Cryptography",
+        "Risk Management",
+      ],
     },
     {
       id: 8,
       title: "Python Programming Fundamentals",
       category: "self-paced",
-      description: "Learn Python programming from scratch. Perfect for beginners with no prior coding experience.",
+      description:
+        "Learn Python programming from scratch. Perfect for beginners with no prior coding experience.",
       duration: "2 months",
       schedule: "Self-paced",
       startDate: "Anytime",
@@ -221,51 +271,95 @@ export default function ProgramsPage() {
       featured: false,
       certificate: true,
       price: "$499",
-      skills: ["Python", "Programming Basics", "Data Types", "Functions", "Object-Oriented Programming"],
+      skills: [
+        "Python",
+        "Programming Basics",
+        "Data Types",
+        "Functions",
+        "Object-Oriented Programming",
+      ],
     },
-  ]
+  ];
 
   useEffect(() => {
-    let active = true
-    setLoading(true); setLoadError("")
-    getPrograms(page, 12).then((response) => {
-      if (!active) return
-      setApiPrograms(response.data.map((program, index) => ({
-        id: program.id, slug: program.slug, title: program.title, category: "program", description: program.description || "",
-        duration: program.durationWeeks ? `${program.durationWeeks} weeks` : "Flexible", schedule: "Flexible",
-        startDate: program.startDate ? new Date(program.startDate).toLocaleDateString(undefined, { dateStyle: "long" }) : "Contact us",
-        students: 0, rating: 0, reviews: 0, image: program.thumbnailUrl || "/placeholder.svg", featured: index < 3,
-        certificate: true, price: program.price == null ? "Contact us" : new Intl.NumberFormat(undefined, { style: "currency", currency: program.currency || "USD" }).format(program.price), skills: [],
-      })))
-      setTotalPages(Math.max(response.totalPages, 1))
-    }).catch((error: any) => { setLoadError(error?.message || "Unable to load programs"); toast({ title: "Unable to load programs", description: error?.message || "Please try again.", variant: "destructive" }) }).finally(() => setLoading(false))
-    return () => { active = false }
-  }, [page, toast])
+    let active = true;
+    setLoading(true);
+    setLoadError("");
+    getPrograms(page, 12)
+      .then((response) => {
+        if (!active) return;
+        setApiPrograms(
+          response.data.map((program, index) => ({
+            id: program.id,
+            slug: program.slug,
+            title: program.title,
+            category: "program",
+            description: program.description || "",
+            duration: program.durationWeeks
+              ? `${program.durationWeeks} weeks`
+              : "Flexible",
+            schedule: "Flexible",
+            startDate: program.startDate
+              ? new Date(program.startDate).toLocaleDateString(undefined, {
+                  dateStyle: "long",
+                })
+              : "Contact us",
+            students: 0,
+            rating: 0,
+            reviews: 0,
+            image: program.thumbnailUrl || "/placeholder.svg",
+            featured: index < 3,
+            certificate: true,
+            price:
+              program.price == null
+                ? "Contact us"
+                : new Intl.NumberFormat(undefined, {
+                    style: "currency",
+                    currency: program.currency || "USD",
+                  }).format(program.price),
+            skills: [],
+          })),
+        );
+        setTotalPages(Math.max(response.totalPages, 1));
+      })
+      .catch((error: any) => {
+        setLoadError(error?.message || "Unable to load programs");
+        toast({
+          title: "Unable to load programs",
+          description: error?.message || "Please try again.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [page, toast]);
 
-  const programs = apiPrograms
+  const programs = apiPrograms;
 
   // Filter programs based on search and filters
   const filteredPrograms = programs.filter((program) => {
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       return (
         program.title.toLowerCase().includes(query) ||
         program.description.toLowerCase().includes(query) ||
         program.category.toLowerCase().includes(query)
-      )
+      );
     }
 
     // Category filters
     if (selectedFilters.length > 0) {
-      return selectedFilters.includes(program.category)
+      return selectedFilters.includes(program.category);
     }
 
-    return true
-  })
+    return true;
+  });
 
   // Featured programs
-  const featuredPrograms = programs.filter((program) => program.featured)
+  const featuredPrograms = programs.filter((program) => program.featured);
 
   return (
     <div className="min-h-screen bg-background">
@@ -288,9 +382,12 @@ export default function ProgramsPage() {
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">Educational Programs</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                Educational Programs
+              </h1>
               <p className="text-muted-foreground">
-                Discover our comprehensive range of educational programs designed to help you achieve your goals
+                Discover our comprehensive range of educational programs
+                designed to help you achieve your goals
               </p>
             </div>
           </div>
@@ -326,9 +423,15 @@ export default function ProgramsPage() {
                 {filterOptions.slice(0, 3).map((option) => (
                   <Badge
                     key={option.id}
-                    variant={selectedFilters.includes(option.id) ? "default" : "outline"}
+                    variant={
+                      selectedFilters.includes(option.id)
+                        ? "default"
+                        : "outline"
+                    }
                     className={`cursor-pointer ${
-                      selectedFilters.includes(option.id) ? "bg-blue-600 hover:bg-blue-700" : "hover:bg-blue-50"
+                      selectedFilters.includes(option.id)
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "hover:bg-blue-50"
                     }`}
                     onClick={() => toggleFilter(option.id)}
                   >
@@ -381,7 +484,10 @@ export default function ProgramsPage() {
                   <div className="p-4">
                     <div className="space-y-4">
                       {filterOptions.map((option) => (
-                        <div key={option.id} className="flex items-center space-x-2">
+                        <div
+                          key={option.id}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={option.id}
                             checked={selectedFilters.includes(option.id)}
@@ -430,26 +536,43 @@ export default function ProgramsPage() {
                                 height={300}
                                 className="w-full h-[200px] object-cover"
                               />
-                              <Badge className="absolute top-4 left-4 bg-blue-600">Featured</Badge>
+                              <Badge className="absolute top-4 left-4 bg-blue-600">
+                                Featured
+                              </Badge>
                             </div>
                             <CardContent className="p-6">
                               <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-xl font-semibold">{program.title}</h3>
+                                <h3 className="text-xl font-semibold">
+                                  {program.title}
+                                </h3>
                                 {program.certificate && (
-                                  <Badge variant="outline" className="bg-green-50 text-green-600">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-green-50 text-green-600"
+                                  >
                                     Certificate
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{program.description}</p>
+                              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                                {program.description}
+                              </p>
                               <div className="flex flex-wrap gap-2 mb-4">
-                                {program.skills.slice(0, 3).map((skill: string, idx: number) => (
-                                  <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-600">
-                                    {skill}
-                                  </Badge>
-                                ))}
+                                {program.skills
+                                  .slice(0, 3)
+                                  .map((skill: string, idx: number) => (
+                                    <Badge
+                                      key={idx}
+                                      variant="outline"
+                                      className="bg-blue-50 text-blue-600"
+                                    >
+                                      {skill}
+                                    </Badge>
+                                  ))}
                                 {program.skills.length > 3 && (
-                                  <Badge variant="outline">+{program.skills.length - 3} more</Badge>
+                                  <Badge variant="outline">
+                                    +{program.skills.length - 3} more
+                                  </Badge>
                                 )}
                               </div>
                               <div className="flex flex-wrap justify-between items-center gap-2 text-sm">
@@ -469,8 +592,13 @@ export default function ProgramsPage() {
                                 </div>
                               </div>
                               <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                                <div className="font-bold text-blue-600">{program.price}</div>
-                                <Button size="sm" className="gap-1 bg-blue-600 hover:bg-blue-700">
+                                <div className="font-bold text-blue-600">
+                                  {program.price}
+                                </div>
+                                <Button
+                                  size="sm"
+                                  className="gap-1 bg-blue-600 hover:bg-blue-700"
+                                >
                                   Learn More
                                   <ChevronRight className="h-4 w-4" />
                                 </Button>
@@ -500,8 +628,8 @@ export default function ProgramsPage() {
                       size="sm"
                       className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                       onClick={() => {
-                        setSearchQuery("")
-                        setSelectedFilters([])
+                        setSearchQuery("");
+                        setSelectedFilters([]);
                       }}
                     >
                       Clear All
@@ -514,12 +642,16 @@ export default function ProgramsPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
                       <Search className="h-8 w-8 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">No programs found</h3>
-                    <p className="text-muted-foreground mb-6">Try adjusting your search or filter criteria</p>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No programs found
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      Try adjusting your search or filter criteria
+                    </p>
                     <Button
                       onClick={() => {
-                        setSearchQuery("")
-                        setSelectedFilters([])
+                        setSearchQuery("");
+                        setSelectedFilters([]);
                       }}
                     >
                       Reset Filters
@@ -529,7 +661,10 @@ export default function ProgramsPage() {
                   <Tabs defaultValue="grid" className="mb-6">
                     <div className="flex justify-end">
                       <TabsList>
-                        <TabsTrigger value="grid" className="flex items-center gap-1">
+                        <TabsTrigger
+                          value="grid"
+                          className="flex items-center gap-1"
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="16"
@@ -548,7 +683,10 @@ export default function ProgramsPage() {
                           </svg>
                           Grid
                         </TabsTrigger>
-                        <TabsTrigger value="list" className="flex items-center gap-1">
+                        <TabsTrigger
+                          value="list"
+                          className="flex items-center gap-1"
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="16"
@@ -576,7 +714,24 @@ export default function ProgramsPage() {
                         animate="visible"
                         variants={staggerContainer}
                       >
-                        {loading && <p className="col-span-full py-12 text-center text-muted-foreground">Loading programs…</p>}{loadError && <p className="col-span-full rounded border border-red-200 bg-red-50 p-6 text-center text-red-700">{loadError}</p>}{!loading && !loadError && filteredPrograms.length === 0 && <p className="col-span-full py-12 text-center text-muted-foreground">No programs found.</p>}{filteredPrograms.map((program) => (
+                        {loading && (
+                          <p className="col-span-full py-12 text-center text-muted-foreground">
+                            Loading programs…
+                          </p>
+                        )}
+                        {loadError && (
+                          <p className="col-span-full rounded border border-red-200 bg-red-50 p-6 text-center text-red-700">
+                            {loadError}
+                          </p>
+                        )}
+                        {!loading &&
+                          !loadError &&
+                          filteredPrograms.length === 0 && (
+                            <p className="col-span-full py-12 text-center text-muted-foreground">
+                              No programs found.
+                            </p>
+                          )}
+                        {filteredPrograms.map((program) => (
                           <motion.div key={program.id} variants={fadeIn}>
                             <Link href={`/programs/${program.id}`}>
                               <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1 overflow-hidden">
@@ -589,14 +744,21 @@ export default function ProgramsPage() {
                                     className="w-full h-[200px] object-cover"
                                   />
                                   {program.featured && (
-                                    <Badge className="absolute top-4 left-4 bg-blue-600">Featured</Badge>
+                                    <Badge className="absolute top-4 left-4 bg-blue-600">
+                                      Featured
+                                    </Badge>
                                   )}
                                 </div>
                                 <CardContent className="p-6">
                                   <div className="flex justify-between items-start mb-2">
-                                    <h3 className="text-xl font-semibold">{program.title}</h3>
+                                    <h3 className="text-xl font-semibold">
+                                      {program.title}
+                                    </h3>
                                     {program.certificate && (
-                                      <Badge variant="outline" className="bg-green-50 text-green-600">
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-green-50 text-green-600"
+                                      >
                                         Certificate
                                       </Badge>
                                     )}
@@ -605,13 +767,21 @@ export default function ProgramsPage() {
                                     {program.description}
                                   </p>
                                   <div className="flex flex-wrap gap-2 mb-4">
-                                    {program.skills.slice(0, 3).map((skill: string, idx: number) => (
-                                      <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-600">
-                                        {skill}
-                                      </Badge>
-                                    ))}
+                                    {program.skills
+                                      .slice(0, 3)
+                                      .map((skill: string, idx: number) => (
+                                        <Badge
+                                          key={idx}
+                                          variant="outline"
+                                          className="bg-blue-50 text-blue-600"
+                                        >
+                                          {skill}
+                                        </Badge>
+                                      ))}
                                     {program.skills.length > 3 && (
-                                      <Badge variant="outline">+{program.skills.length - 3} more</Badge>
+                                      <Badge variant="outline">
+                                        +{program.skills.length - 3} more
+                                      </Badge>
                                     )}
                                   </div>
                                   <div className="flex flex-wrap justify-between items-center gap-2 text-sm">
@@ -631,8 +801,13 @@ export default function ProgramsPage() {
                                     </div>
                                   </div>
                                   <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                                    <div className="font-bold text-blue-600">{program.price}</div>
-                                    <Button size="sm" className="gap-1 bg-blue-600 hover:bg-blue-700">
+                                    <div className="font-bold text-blue-600">
+                                      {program.price}
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      className="gap-1 bg-blue-600 hover:bg-blue-700"
+                                    >
                                       Learn More
                                       <ChevronRight className="h-4 w-4" />
                                     </Button>
@@ -646,7 +821,12 @@ export default function ProgramsPage() {
                     </TabsContent>
 
                     <TabsContent value="list" className="mt-6">
-                      <motion.div className="space-y-6" initial="hidden" animate="visible" variants={staggerContainer}>
+                      <motion.div
+                        className="space-y-6"
+                        initial="hidden"
+                        animate="visible"
+                        variants={staggerContainer}
+                      >
                         {filteredPrograms.map((program) => (
                           <motion.div key={program.id} variants={fadeIn}>
                             <Link href={`/programs/${program.id}`}>
@@ -661,25 +841,40 @@ export default function ProgramsPage() {
                                       className="w-full h-[200px] md:h-full object-cover"
                                     />
                                     {program.featured && (
-                                      <Badge className="absolute top-4 left-4 bg-blue-600">Featured</Badge>
+                                      <Badge className="absolute top-4 left-4 bg-blue-600">
+                                        Featured
+                                      </Badge>
                                     )}
                                   </div>
                                   <div className="p-6 flex-1">
                                     <div className="flex justify-between items-start mb-2">
-                                      <h3 className="text-xl font-semibold">{program.title}</h3>
+                                      <h3 className="text-xl font-semibold">
+                                        {program.title}
+                                      </h3>
                                       {program.certificate && (
-                                        <Badge variant="outline" className="bg-green-50 text-green-600">
+                                        <Badge
+                                          variant="outline"
+                                          className="bg-green-50 text-green-600"
+                                        >
                                           Certificate
                                         </Badge>
                                       )}
                                     </div>
-                                    <p className="text-muted-foreground text-sm mb-4">{program.description}</p>
+                                    <p className="text-muted-foreground text-sm mb-4">
+                                      {program.description}
+                                    </p>
                                     <div className="flex flex-wrap gap-2 mb-4">
-                                      {program.skills.map((skill: string, idx: number) => (
-                                        <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-600">
-                                          {skill}
-                                        </Badge>
-                                      ))}
+                                      {program.skills.map(
+                                        (skill: string, idx: number) => (
+                                          <Badge
+                                            key={idx}
+                                            variant="outline"
+                                            className="bg-blue-50 text-blue-600"
+                                          >
+                                            {skill}
+                                          </Badge>
+                                        ),
+                                      )}
                                     </div>
                                     <div className="flex flex-wrap gap-4 mb-4 text-sm">
                                       <div className="flex items-center gap-1">
@@ -697,12 +892,15 @@ export default function ProgramsPage() {
                                       <div className="flex items-center gap-1">
                                         <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
                                         <span>
-                                          {program.rating} ({program.reviews} reviews)
+                                          {program.rating} ({program.reviews}{" "}
+                                          reviews)
                                         </span>
                                       </div>
                                     </div>
                                     <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                                      <div className="font-bold text-blue-600">{program.price}</div>
+                                      <div className="font-bold text-blue-600">
+                                        {program.price}
+                                      </div>
                                       <Button className="gap-1 bg-blue-600 hover:bg-blue-700">
                                         Learn More
                                         <ChevronRight className="h-4 w-4" />
@@ -721,7 +919,27 @@ export default function ProgramsPage() {
               </div>
             </div>
           </div>
-          {totalPages > 1 && <div className="mt-10 flex items-center justify-center gap-3"><Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Previous</Button><span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span><Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Next</Button></div>}
+          {totalPages > 1 && (
+            <div className="mt-10 flex items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => setPage((value) => value - 1)}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -731,8 +949,9 @@ export default function ProgramsPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Why Choose Our Programs</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our educational programs are designed to provide you with the skills and knowledge you need to succeed in
-              today's competitive world.
+              Our educational programs are designed to provide you with the
+              skills and knowledge you need to succeed in today's competitive
+              world.
             </p>
           </div>
 
@@ -744,10 +963,13 @@ export default function ProgramsPage() {
                     <Award className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-2">Expert Instructors</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      Expert Instructors
+                    </h3>
                     <p className="text-muted-foreground">
-                      Learn from industry professionals with years of experience in their fields. Our instructors are
-                      passionate about teaching and committed to your success.
+                      Learn from industry professionals with years of experience
+                      in their fields. Our instructors are passionate about
+                      teaching and committed to your success.
                     </p>
                   </div>
                 </div>
@@ -761,10 +983,13 @@ export default function ProgramsPage() {
                     <CheckCircle className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-2">Industry-Recognized Credentials</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      Industry-Recognized Credentials
+                    </h3>
                     <p className="text-muted-foreground">
-                      Earn certificates and degrees that are respected by employers worldwide. Our programs are designed
-                      with industry needs in mind.
+                      Earn certificates and degrees that are respected by
+                      employers worldwide. Our programs are designed with
+                      industry needs in mind.
                     </p>
                   </div>
                 </div>
@@ -778,10 +1003,13 @@ export default function ProgramsPage() {
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-2">Supportive Community</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      Supportive Community
+                    </h3>
                     <p className="text-muted-foreground">
-                      Join a community of learners and professionals who will support you throughout your educational
-                      journey and beyond.
+                      Join a community of learners and professionals who will
+                      support you throughout your educational journey and
+                      beyond.
                     </p>
                   </div>
                 </div>
@@ -795,17 +1023,27 @@ export default function ProgramsPage() {
       <section className="py-16 bg-blue-600 text-white">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Advance Your Career?</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to Advance Your Career?
+            </h2>
             <p className="text-blue-100 mb-8">
-              Take the next step in your educational journey. Browse our programs and find the perfect fit for your
-              goals and aspirations.
+              Take the next step in your educational journey. Browse our
+              programs and find the perfect fit for your goals and aspirations.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" variant="secondary" className="gap-2 bg-white text-blue-600 hover:bg-blue-50">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="gap-2 bg-white text-blue-600 hover:bg-blue-50"
+              >
                 Explore All Programs
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="gap-2 border-white text-white hover:bg-blue-500">
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 border-white text-white hover:bg-blue-500"
+              >
                 Contact an Advisor
               </Button>
             </div>
@@ -813,5 +1051,5 @@ export default function ProgramsPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }
