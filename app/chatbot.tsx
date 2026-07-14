@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect, Ref } from "react";
 import { FaCommentDots } from "react-icons/fa";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import instance from "@/helper/axios";
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +12,7 @@ const Chatbot = () => {
     [],
   );
   const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const stompRef = useRef<Client | null>(null);
 
@@ -99,6 +102,7 @@ const Chatbot = () => {
         "/topic/chat/response",
         (greeting) => {
           const message = JSON.parse(greeting.body);
+          setIsTyping(false);
           setMessages((prev) => [
             ...prev,
             { from: "bot", text: message?.message },
@@ -109,6 +113,7 @@ const Chatbot = () => {
 
     client.onWebSocketError = (error) => {
       console.error("WebSocket error:", error);
+      setIsTyping(false);
     };
 
     client.activate();
@@ -164,6 +169,7 @@ const Chatbot = () => {
 
     setMessages([...messages, { from: "user", text: input }]);
     setInput("");
+    setIsTyping(true);
 
     stompRef?.current?.publish({
       destination: "/app/chat",
@@ -191,7 +197,7 @@ const Chatbot = () => {
     if (bodyRef.current) {
       bodyRef!.current!.scrollTop = bodyRef!.current!.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
   // Send welcome message when chat opens
   useEffect(() => {
@@ -243,9 +249,25 @@ const Chatbot = () => {
                     : "bg-gray-200 self-start text-left"
                 }`}
               >
-                {msg.text}
+                {msg.from === "bot" ? (
+                  <div className="chat-markdown">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.text}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  msg.text
+                )}
               </div>
             ))}
+
+            {isTyping && (
+              <div className="bg-gray-200 self-start p-3 rounded-2xl shadow-md flex items-center gap-1">
+                <span className="typing-dot" />
+                <span className="typing-dot" style={{ animationDelay: "0.2s" }} />
+                <span className="typing-dot" style={{ animationDelay: "0.4s" }} />
+              </div>
+            )}
           </div>
 
           {/* Input Area */}
@@ -268,6 +290,83 @@ const Chatbot = () => {
         </div>
       )}
 
+      {/* Markdown rendering inside bot bubbles (global: react-markdown renders its own elements) */}
+      <style jsx global>{`
+        .chat-markdown > :first-child {
+          margin-top: 0;
+        }
+        .chat-markdown > :last-child {
+          margin-bottom: 0;
+        }
+        .chat-markdown p {
+          margin: 0.5rem 0;
+          line-height: 1.5;
+        }
+        .chat-markdown ul,
+        .chat-markdown ol {
+          margin: 0.5rem 0;
+          padding-left: 1.25rem;
+          list-style-position: outside;
+        }
+        .chat-markdown ul {
+          list-style-type: disc;
+        }
+        .chat-markdown ol {
+          list-style-type: decimal;
+        }
+        .chat-markdown li {
+          margin: 0.25rem 0;
+        }
+        .chat-markdown strong {
+          font-weight: 600;
+        }
+        .chat-markdown em {
+          font-style: italic;
+        }
+        .chat-markdown a {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+        .chat-markdown h1,
+        .chat-markdown h2,
+        .chat-markdown h3 {
+          font-weight: 600;
+          margin: 0.75rem 0 0.35rem;
+        }
+        .chat-markdown h1 {
+          font-size: 1.05rem;
+        }
+        .chat-markdown h2 {
+          font-size: 1rem;
+        }
+        .chat-markdown h3 {
+          font-size: 0.95rem;
+        }
+        .chat-markdown code {
+          background: rgba(0, 0, 0, 0.07);
+          padding: 0.1rem 0.3rem;
+          border-radius: 0.25rem;
+          font-size: 0.85em;
+        }
+        .chat-markdown pre {
+          background: rgba(0, 0, 0, 0.07);
+          padding: 0.6rem;
+          border-radius: 0.5rem;
+          overflow-x: auto;
+          margin: 0.5rem 0;
+        }
+        .chat-markdown pre code {
+          background: none;
+          padding: 0;
+        }
+        .chat-markdown blockquote {
+          border-left: 3px solid #cbd5e1;
+          padding-left: 0.6rem;
+          margin: 0.5rem 0;
+          color: #475569;
+        }
+      `}</style>
+
       {/* Slide-up animation */}
       <style jsx>{`
         @keyframes slideUp {
@@ -282,6 +381,26 @@ const Chatbot = () => {
         }
         .animate-slideUp {
           animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes typingBounce {
+          0%,
+          60%,
+          100% {
+            transform: translateY(0);
+            opacity: 0.4;
+          }
+          30% {
+            transform: translateY(-4px);
+            opacity: 1;
+          }
+        }
+        .typing-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 9999px;
+          background-color: #6b7280;
+          animation: typingBounce 1.2s ease-in-out infinite;
         }
       `}</style>
     </div>
