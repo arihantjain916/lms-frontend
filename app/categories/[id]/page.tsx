@@ -37,9 +37,12 @@ import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import instance from "@/helper/axios";
 import { getIcon } from "@/lib/getIcon";
+import { useAuth } from "@/hooks/use-authenticated";
+import { loginHref } from "@/lib/auth-navigation";
 
 export default function CategoryPage() {
   const { id } = useParams<{ id: string }>();
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryData, setCategoryData] = useState<any>({});
   const [courses, setCourses] = useState<any[]>([]);
@@ -431,10 +434,19 @@ export default function CategoryPage() {
                               ₹{course.price || "0"}
                             </p>
                             <Button
+                              asChild
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700"
                             >
-                              Enroll Now
+                              <Link
+                                href={
+                                  isAuthenticated
+                                    ? `/courses/${course.id}`
+                                    : loginHref(`/courses/${course.id}`)
+                                }
+                              >
+                                Enroll Now
+                              </Link>
                             </Button>
                           </div>
                         </CardContent>
@@ -601,10 +613,19 @@ export default function CategoryPage() {
                                 Starting from ₹{course?.price || 0}
                               </p>
                               <Button
+                                asChild
                                 size="sm"
                                 className="bg-blue-600 hover:bg-blue-700"
                               >
-                                Enroll Now
+                                <Link
+                                  href={
+                                    isAuthenticated
+                                      ? `/courses/${course.id}`
+                                      : loginHref(`/courses/${course.id}`)
+                                  }
+                                >
+                                  Enroll Now
+                                </Link>
                               </Button>
                             </div>
                           </CardContent>

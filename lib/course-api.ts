@@ -2,6 +2,12 @@ import instance from "@/helper/axios";
 
 export type CourseUser = { id: string; username: string; name: string };
 export type CourseCategory = { id: string; name: string };
+export type CatalogCategory = CourseCategory & {
+  slug: string;
+  description?: string;
+  courseCount?: number;
+  isFeatured?: boolean;
+};
 
 export type Course = {
   id: number;
@@ -84,6 +90,11 @@ function entity<T>(response: any): T {
   if (!response?.status || response?.data == null)
     throw new Error(response?.message || "Request failed");
   return response.data as T;
+}
+
+export async function getCatalogCategories() {
+  const response: any = await instance.get("/category");
+  return entity<CatalogCategory[]>(response);
 }
 
 export async function getCourses(filters: CourseFilters = {}) {

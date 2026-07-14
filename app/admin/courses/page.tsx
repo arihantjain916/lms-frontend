@@ -266,6 +266,7 @@ export default function AdminCoursesPage() {
                 <Input
                   id="course-title"
                   required
+                  maxLength={255}
                   value={form.title}
                   onChange={(event) =>
                     setForm({
@@ -281,6 +282,7 @@ export default function AdminCoursesPage() {
                 <Input
                   id="course-slug"
                   required
+                  maxLength={255}
                   value={form.slug}
                   onChange={(event) =>
                     setForm({ ...form, slug: slugify(event.target.value) })

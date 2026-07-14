@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import instance from "@/helper/axios";
 import toast from "react-hot-toast";
 import { notifyAuthStateChanged } from "@/hooks/use-authenticated";
+import { safeReturnPath } from "@/lib/auth-navigation";
 
 export default function LoginPage() {
   // const { toast } = useToast();
@@ -95,7 +96,10 @@ export default function LoginPage() {
 
       toast.success("Login successful");
 
-      router.push("/");
+      const returnTo = safeReturnPath(
+        new URLSearchParams(window.location.search).get("next"),
+      );
+      router.replace(returnTo);
     } catch (error: any) {
       toast.error(error?.message || "Something went wrong");
     } finally {

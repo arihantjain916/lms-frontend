@@ -125,9 +125,10 @@ export default function RegisterPage() {
         return toast.error(res?.message || "Something went wrong");
       }
 
-      toast.success("User registered successfully. Please login.");
-
-      router.push("/");
+      toast.success("Account created. Check your email to continue.");
+      router.push(
+        `/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}&sent=1`,
+      );
     } catch (error: any) {
       toast.error(error?.message || "Something went wrong");
     } finally {

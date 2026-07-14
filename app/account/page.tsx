@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loginHref } from "@/lib/auth-navigation";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function AccountPage() {
       setProfile({ name: user.name || "", username: user.username || "" });
   }, [user]);
   useEffect(() => {
-    if (!loading && !user) router.replace("/login");
+    if (!loading && !user) router.replace(loginHref("/account"));
   }, [loading, router, user]);
 
   async function updateProfile(event: FormEvent) {

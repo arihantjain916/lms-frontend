@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type Status = "verifying" | "success" | "error";
+type Status = "sent" | "verifying" | "success" | "error";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -27,8 +27,19 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    const token = new URLSearchParams(window.location.search).get("token");
+    const search = new URLSearchParams(window.location.search);
+    const token = search.get("token");
+    const registeredEmail = search.get("email")?.trim().toLowerCase() || "";
+    if (registeredEmail) setEmail(registeredEmail);
     if (!token) {
+      if (registeredEmail && search.get("sent") === "1") {
+        setStatus("sent");
+        setMessage(`We sent a verification link to ${registeredEmail}.`);
+        setResendMessage(
+          "Verification email sent. Check your inbox and spam folder.",
+        );
+        return;
+      }
       setStatus("error");
       setMessage("This verification link is missing its security token.");
       return;
@@ -93,14 +104,16 @@ export default function VerifyEmailPage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
           <div
-            className={`mx-auto mb-3 rounded-full p-3 ${status === "success" ? "bg-green-100 text-green-700" : status === "error" ? "bg-red-100 text-red-700" : "animate-pulse bg-blue-100 text-blue-700"}`}
+            className={`mx-auto mb-3 rounded-full p-3 ${status === "success" ? "bg-green-100 text-green-700" : status === "error" ? "bg-red-100 text-red-700" : status === "sent" ? "bg-blue-100 text-blue-700" : "animate-pulse bg-blue-100 text-blue-700"}`}
           >
             <Icon className="h-7 w-7" />
           </div>
           <h1 className="text-3xl font-bold">
-            {status === "verifying"
-              ? "Verifying email"
-              : status === "success"
+            {status === "sent"
+              ? "Check your inbox"
+              : status === "verifying"
+                ? "Verifying email"
+                : status === "success"
                 ? "Email verified"
                 : "Verification failed"}
           </h1>
@@ -114,7 +127,7 @@ export default function VerifyEmailPage() {
               </Link>
             </Button>
           )}
-          {status === "error" && (
+          {(status === "sent" || status === "error") && (
             <form onSubmit={resend} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>

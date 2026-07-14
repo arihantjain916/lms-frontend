@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-authenticated";
-import { getSearchSuggestions } from "@/lib/content-api";
+import { getPrograms, getSearchSuggestions, type Program } from "@/lib/content-api";
+import { getCatalogCategories, type CatalogCategory } from "@/lib/course-api";
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -32,6 +33,8 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState<
     { type: string; title: string; slug: string }[]
   >([]);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const notificationRef = useRef<HTMLDivElement>(null);
 
   // Close notifications when clicking outside
@@ -74,29 +77,25 @@ export default function Header() {
     };
   }, [searchQuery]);
 
-  const notifications = [
-    {
-      id: 1,
-      title: "New Course Available",
-      message: "Advanced Python Programming is now available",
-      time: "2 hours ago",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Assignment Reminder",
-      message: "Your Web Development project is due tomorrow",
-      time: "5 hours ago",
-      read: false,
-    },
-    {
-      id: 3,
-      title: "Live Webinar",
-      message: "Join our AI in Education webinar this Friday",
-      time: "1 day ago",
-      read: true,
-    },
-  ];
+  useEffect(() => {
+    let active = true;
+    Promise.all([getCatalogCategories(), getPrograms(1, 5)])
+      .then(([categoryItems, programPage]) => {
+        if (!active) return;
+        setCategories(categoryItems.slice(0, 5));
+        setPrograms(programPage.data.slice(0, 5));
+      })
+      .catch(() => {
+        if (!active) return;
+        setCategories([]);
+        setPrograms([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const notifications: { id: string; title: string; message: string; time: string; read: boolean }[] = [];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -123,30 +122,20 @@ export default function Header() {
                 >
                   All Categories
                 </Link>
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  Web Development
-                </Link>
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  Data Science
-                </Link>
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  Business
-                </Link>
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  Design
-                </Link>
+                {categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/categories/${category.slug}`}
+                    className="block truncate rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+                {categories.length === 0 && (
+                  <p className="px-3 py-2 text-sm text-muted-foreground">
+                    No categories available
+                  </p>
+                )}
                 <div className="border-t my-1"></div>
                 <Link
                   href="/categories"
@@ -166,24 +155,20 @@ export default function Header() {
             </button>
             <div className="absolute left-0 top-full mt-2 w-56 rounded-md border bg-background shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
               <div className="p-2">
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  Degree Programs
-                </Link>
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  Certificates
-                </Link>
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  Professional Training
-                </Link>
+                {programs.map((program) => (
+                  <Link
+                    key={program.id}
+                    href={`/programs/${program.slug}`}
+                    className="block truncate rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                  >
+                    {program.title}
+                  </Link>
+                ))}
+                {programs.length === 0 && (
+                  <p className="px-3 py-2 text-sm text-muted-foreground">
+                    No active programs
+                  </p>
+                )}
                 <div className="border-t my-1"></div>
                 <Link
                   href="/programs"
@@ -220,20 +205,6 @@ export default function Header() {
                   className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
                 >
                   Webinars
-                </Link>
-                <Link
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
-                >
-                  E-books
-                </Link>
-                <div className="border-t my-1"></div>
-                <Link
-                  href="#"
-                  className="flex items-center rounded-md px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
-                >
-                  Resource Library
-                  <ArrowRight className="ml-auto h-4 w-4" />
                 </Link>
               </div>
             </div>
@@ -469,53 +440,58 @@ export default function Header() {
               />
             </form>
 
-            {isAuthenticated && (
-              <div className="border rounded-md overflow-hidden">
+            <div className="border rounded-md overflow-hidden">
+              <Link
+                href="/categories"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center justify-between bg-slate-50 p-3 hover:bg-blue-50"
+              >
+                <span className="text-sm font-semibold">Courses</span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+              {categories.map((category) => (
                 <Link
-                  href="/categories"
-                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
+                  key={category.id}
+                  href={`/categories/${category.slug}`}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block border-t px-5 py-2.5 text-sm hover:bg-blue-50"
                 >
-                  <span className="text-sm font-medium">All Categories</span>
-                  <ChevronRight className="h-4 w-4" />
+                  {category.name}
                 </Link>
-                <div
-                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
-                  onClick={() => {}}
-                >
-                  <span className="text-sm font-medium">Courses</span>
-                  <ChevronRight className="h-4 w-4" />
-                </div>
-                <div
-                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
-                  onClick={() => {}}
-                >
-                  <span className="text-sm font-medium">Programs</span>
-                  <ChevronRight className="h-4 w-4" />
-                </div>
-                <div
-                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
-                  onClick={() => {}}
-                >
-                  <span className="text-sm font-medium">Resources</span>
-                  <ChevronRight className="h-4 w-4" />
-                </div>
+              ))}
+              <Link
+                href="/programs"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center justify-between border-t bg-slate-50 p-3 hover:bg-blue-50"
+              >
+                <span className="text-sm font-semibold">Programs</span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+              {programs.map((program) => (
                 <Link
-                  href="#"
-                  className="block p-3 text-sm font-medium hover:bg-blue-50"
+                  key={program.id}
+                  href={`/programs/${program.slug}`}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block border-t px-5 py-2.5 text-sm hover:bg-blue-50"
                 >
-                  About Us
+                  {program.title}
                 </Link>
-                <Link
-                  href="#"
-                  className="block p-3 text-sm font-medium hover:bg-blue-50"
-                >
-                  Contact
+              ))}
+              {[
+                ["/blog", "Blog"],
+                ["/tutorials", "Tutorials"],
+                ["/webinars", "Webinars"],
+                ["/about", "About Us"],
+                ["/contact", "Contact"],
+              ].map(([href, label]) => (
+                <Link key={href} href={href} onClick={() => setIsMenuOpen(false)} className="block border-t p-3 text-sm font-medium hover:bg-blue-50">
+                  {label}
                 </Link>
-              </div>
-            )}
+              ))}
+            </div>
 
             {/* Mobile Notifications */}
-            <div className="border rounded-md overflow-hidden">
+            {isAuthenticated && <div className="border rounded-md overflow-hidden">
               <div className="flex items-center justify-between p-3 bg-blue-50">
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4 text-blue-600" />
@@ -526,7 +502,7 @@ export default function Header() {
                 </Badge>
               </div>
               <div className="max-h-[200px] overflow-y-auto">
-                {notifications.slice(0, 2).map((notification) => (
+                {notifications.length ? notifications.slice(0, 2).map((notification) => (
                   <div
                     key={notification.id}
                     className={`p-3 border-t hover:bg-muted/50 transition-colors ${!notification.read ? "bg-blue-50/50" : ""}`}
@@ -536,7 +512,7 @@ export default function Header() {
                       {notification.message}
                     </p>
                   </div>
-                ))}
+                )) : <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet</p>}
               </div>
               <div className="p-2 border-t bg-muted/20">
                 <Button
@@ -547,7 +523,7 @@ export default function Header() {
                   View all
                 </Button>
               </div>
-            </div>
+            </div>}
 
             {isAuthenticated ? (
               <div className="grid grid-cols-2 gap-2 mt-2">

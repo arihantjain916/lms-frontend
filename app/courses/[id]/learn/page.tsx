@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { loginHref } from "@/lib/auth-navigation";
 
 export default function CourseLearnPage() {
   const { id } = useParams<{ id: string }>();
@@ -180,7 +181,7 @@ export default function CourseLearnPage() {
               <Link href={`/courses/${id}`}>View course</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/login">Sign in</Link>
+              <Link href={loginHref(`/courses/${id}/learn`)}>Sign in</Link>
             </Button>
           </div>
         </div>

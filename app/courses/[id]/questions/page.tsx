@@ -1,7 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ChevronLeft,
   MessageCircle,
@@ -26,9 +26,11 @@ import {
   type QuestionReply,
 } from "@/lib/content-api";
 import toast from "react-hot-toast";
+import { loginHref } from "@/lib/auth-navigation";
 
 export default function CourseQuestionsPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const [items, setItems] = useState<CourseQuestion[]>([]);
   const [page, setPage] = useState(1);
@@ -89,6 +91,10 @@ export default function CourseQuestionsPage() {
     }
   }
   async function toggleHelpful(item: CourseQuestion) {
+    if (!isAuthenticated) {
+      router.push(loginHref(`/courses/${id}/questions`));
+      return;
+    }
     try {
       if (helpful.has(item.id)) {
         await unmarkQuestionHelpful(item.id);
@@ -152,7 +158,10 @@ export default function CourseQuestionsPage() {
         </Card>
       ) : (
         <p className="mt-5 rounded border bg-blue-50 p-4">
-          <Link href="/login" className="font-medium text-blue-700">
+          <Link
+            href={loginHref(`/courses/${id}/questions`)}
+            className="font-medium text-blue-700"
+          >
             Sign in
           </Link>{" "}
           to participate.
@@ -193,7 +202,6 @@ export default function CourseQuestionsPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => toggleHelpful(item)}
-                    disabled={!isAuthenticated}
                   >
                     <ThumbsUp
                       className={`mr-1 h-4 w-4 ${helpful.has(item.id) ? "fill-blue-600 text-blue-600" : ""}`}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Calendar, Clock, Download, Loader2, Play, Users } from "lucide-react";
@@ -17,9 +17,13 @@ import {
   type Webinar,
   type WebinarResource,
 } from "@/lib/catalog-api";
+import { useAuth } from "@/hooks/use-authenticated";
+import { loginHref } from "@/lib/auth-navigation";
 
 export default function WebinarDetailPage() {
   const slug = String(useParams().slug);
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [webinar, setWebinar] = useState<Webinar | null>(null);
   const [resources, setResources] = useState<WebinarResource[]>([]);
@@ -39,6 +43,10 @@ export default function WebinarDetailPage() {
   }, [slug, toast]);
   async function register() {
     if (!webinar) return;
+    if (!isAuthenticated) {
+      router.push(loginHref(`/webinars/${slug}`));
+      return;
+    }
     try {
       await registerForWebinar(webinar.id);
       toast({ title: "Registration successful" });
@@ -52,6 +60,10 @@ export default function WebinarDetailPage() {
   }
   async function recording() {
     if (!webinar) return;
+    if (!isAuthenticated) {
+      router.push(loginHref(`/webinars/${slug}`));
+      return;
+    }
     try {
       const url = await getWebinarRecording(webinar.id);
       window.open(url, "_blank", "noopener,noreferrer");
@@ -65,6 +77,10 @@ export default function WebinarDetailPage() {
   }
   async function loadResources() {
     if (!webinar) return;
+    if (!isAuthenticated) {
+      router.push(loginHref(`/webinars/${slug}`));
+      return;
+    }
     try {
       setResources(await getWebinarResources(webinar.id));
     } catch (e: any) {

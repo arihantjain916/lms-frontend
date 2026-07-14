@@ -117,6 +117,11 @@ export async function saveAdminCourse(input: {
   isFeatured: boolean;
   level: string;
 }) {
+  if (input.title.length > 255)
+    throw new Error("Course title must be 255 characters or fewer.");
+  if (input.slug.length > 255)
+    throw new Error("Course slug must be 255 characters or fewer.");
+  
   const response: any = input.id
     ? await instance.put("/course/update", input)
     : await instance.post("/course/add", input);

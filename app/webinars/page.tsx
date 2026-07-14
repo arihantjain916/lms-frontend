@@ -14,9 +14,14 @@ import {
   type Webinar,
 } from "@/lib/catalog-api";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-authenticated";
+import { useRouter } from "next/navigation";
+import { loginHref } from "@/lib/auth-navigation";
 
 export default function WebinarsPage() {
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("upcoming");
   const [page, setPage] = useState(1);
@@ -57,6 +62,10 @@ export default function WebinarsPage() {
     };
   }, [page, query, status]);
   async function register(item: Webinar) {
+    if (!isAuthenticated) {
+      router.push(loginHref(`/webinars/${item.slug}`));
+      return;
+    }
     try {
       await registerForWebinar(item.id);
       toast({
@@ -84,7 +93,13 @@ export default function WebinarsPage() {
           </div>
           <div className="flex gap-2">
             <Button asChild variant="outline">
-              <Link href="/webinars/my">My registrations</Link>
+              <Link
+                href={
+                  isAuthenticated ? "/webinars/my" : loginHref("/webinars/my")
+                }
+              >
+                My registrations
+              </Link>
             </Button>
             <Button asChild>
               <Link href="/webinars/host">Apply to host</Link>

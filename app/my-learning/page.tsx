@@ -14,6 +14,7 @@ import {
   WishlistItem,
 } from "@/lib/learning-api";
 import { useAuth } from "@/hooks/use-authenticated";
+import { loginHref } from "@/lib/auth-navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -79,7 +80,7 @@ export default function MyLearningPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold">Sign in to view your learning</h1>
           <Button asChild className="mt-5">
-            <Link href="/login">Sign in</Link>
+            <Link href={loginHref("/my-learning")}>Sign in</Link>
           </Button>
         </div>
       </main>
