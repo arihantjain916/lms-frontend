@@ -124,24 +124,25 @@ export default function CourseDetailPage() {
   const [questionText, setQuestionText] = useState("");
   const [questionPage, setQuestionPage] = useState(1);
   const [questionPages, setQuestionPages] = useState(1);
+  const resolvedCourseId = course?.id;
 
   const loadQuestions = useCallback(async () => {
-    if (!id) return;
+    if (!resolvedCourseId) return;
     try {
-      const result = await getCourseQuestions(id, questionPage, 10);
+      const result = await getCourseQuestions(resolvedCourseId, questionPage, 10);
       setQuestions(result.data);
       setQuestionPages(Math.max(result.totalPages, 1));
     } catch {
       setQuestions([]);
     }
-  }, [id, questionPage]);
+  }, [questionPage, resolvedCourseId]);
 
   const loadReviews = useCallback(async () => {
-    if (!id) return;
-    const result = await getCourseReviews(id, 1, 20);
+    if (!resolvedCourseId) return;
+    const result = await getCourseReviews(resolvedCourseId, 1, 20);
     setReviews(result.data);
     setReviewTotal(result.totalElements);
-  }, [id]);
+  }, [resolvedCourseId]);
 
   const loadPage = useCallback(async () => {
     if (!id) return;
@@ -150,11 +151,12 @@ export default function CourseDetailPage() {
     try {
       const courseResult = await getCourse(id);
       setCourse(courseResult);
+      const courseId = courseResult.id;
       const results = await Promise.allSettled([
-        getCourseCurriculum(id, 1, 100),
-        getCourseInstructor(id),
-        getCourseReviews(id, 1, 20),
-        getRelatedCourses(id, 4),
+        getCourseCurriculum(courseId, 1, 100),
+        getCourseInstructor(courseId),
+        getCourseReviews(courseId, 1, 20),
+        getRelatedCourses(courseId, 4),
       ]);
       if (results[0].status === "fulfilled") setLessons(results[0].value.data);
       if (results[1].status === "fulfilled") setInstructor(results[1].value);
@@ -172,17 +174,20 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     loadPage();
-    loadQuestions();
-  }, [loadPage, loadQuestions, restoreKey]);
+  }, [loadPage, restoreKey]);
   useEffect(() => {
-    if (id) trackCourseView(id).catch(() => undefined);
-  }, [id]);
+    loadQuestions();
+  }, [loadQuestions, restoreKey]);
+  useEffect(() => {
+    if (resolvedCourseId) trackCourseView(resolvedCourseId).catch(() => undefined);
+  }, [resolvedCourseId]);
 
   async function submitQuestion(event: FormEvent) {
     event.preventDefault();
     if (!isAuthenticated) return router.push(loginHref(`/courses/${id}`));
     try {
-      await askCourseQuestion(id, questionText.trim());
+      if (!resolvedCourseId) return;
+      await askCourseQuestion(resolvedCourseId, questionText.trim());
       setQuestionText("");
       await loadQuestions();
       toast.success("Question posted");
@@ -200,16 +205,16 @@ export default function CourseDetailPage() {
   }
 
   useEffect(() => {
-    if (!isAuthenticated || !id) {
+    if (!isAuthenticated || !resolvedCourseId) {
       setEnrolled(false);
       setWishlisted(false);
       setCourseProgress(null);
       return;
     }
-    getMyEnrollment(id)
+    getMyEnrollment(resolvedCourseId)
       .then(() => {
         setEnrolled(true);
-        getCourseProgress(id)
+        getCourseProgress(resolvedCourseId)
           .then(setCourseProgress)
           .catch(() => setCourseProgress(null));
       })
@@ -220,18 +225,19 @@ export default function CourseDetailPage() {
     getWishlist(1, 100)
       .then((result) =>
         setWishlisted(
-          result.data.some((item) => String(item.course.id) === String(id)),
+          result.data.some((item) => String(item.course.id) === String(resolvedCourseId)),
         ),
       )
       .catch(() => setWishlisted(false));
-  }, [id, isAuthenticated]);
+  }, [isAuthenticated, resolvedCourseId]);
 
   async function submitReview(event: FormEvent) {
     event.preventDefault();
     if (!isAuthenticated) return;
     setSubmittingReview(true);
     try {
-      await addCourseReview(id, Number(rating), comment.trim());
+      if (!resolvedCourseId) return;
+      await addCourseReview(resolvedCourseId, Number(rating), comment.trim());
       setComment("");
       setRating("5");
       await loadReviews();
@@ -251,10 +257,11 @@ export default function CourseDetailPage() {
 
   async function toggleWishlist() {
     if (!isAuthenticated) return router.push(loginHref(`/courses/${id}`));
+    if (!resolvedCourseId) return;
     setActionLoading(true);
     try {
-      if (wishlisted) await removeFromWishlist(id);
-      else await addToWishlist(id);
+      if (wishlisted) await removeFromWishlist(resolvedCourseId);
+      else await addToWishlist(resolvedCourseId);
       setWishlisted(!wishlisted);
       toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist");
     } catch (requestError: any) {
@@ -266,16 +273,17 @@ export default function CourseDetailPage() {
 
   async function startCourse() {
     if (!isAuthenticated) return router.push(loginHref(`/courses/${id}`));
-    if (enrolled) return router.push(`/courses/${id}/learn`);
+    if (!resolvedCourseId) return;
+    if (enrolled) return router.push(`/courses/${resolvedCourseId}/learn`);
     setActionLoading(true);
     try {
       if (!course?.price) {
-        await enrollCourse(id);
+        await enrollCourse(resolvedCourseId);
         setEnrolled(true);
         toast.success("Enrollment successful");
-        router.push(`/courses/${id}/learn`);
+        router.push(`/courses/${resolvedCourseId}/learn`);
       } else {
-        const order = await createCheckout(id);
+        const order = await createCheckout(resolvedCourseId);
         router.push(`/orders/${order.id}`);
       }
     } catch (requestError: any) {
@@ -286,9 +294,10 @@ export default function CourseDetailPage() {
   }
 
   async function unenroll() {
+    if (!resolvedCourseId) return;
     setActionLoading(true);
     try {
-      await unenrollCourse(id);
+      await unenrollCourse(resolvedCourseId);
       setEnrolled(false);
       setCourseProgress(null);
       toast.success("You have unenrolled");
@@ -300,9 +309,10 @@ export default function CourseDetailPage() {
   }
 
   async function issueCertificate() {
+    if (!resolvedCourseId) return;
     setActionLoading(true);
     try {
-      const certificate = await createCertificate(id);
+      const certificate = await createCertificate(resolvedCourseId);
       router.push(`/certificates/${certificate.id}`);
     } catch (requestError: any) {
       toast.error(requestError?.message || "Unable to issue certificate");
@@ -794,7 +804,7 @@ export default function CourseDetailPage() {
       )}
       <div className="container pb-12 text-center">
         <Button asChild>
-          <Link href={`/courses/${id}/questions`}>
+          <Link href={`/courses/${resolvedCourseId}/questions`}>
             Open full course discussion
           </Link>
         </Button>

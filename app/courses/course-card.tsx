@@ -15,10 +15,11 @@ function price(value?: number | null) {
 }
 
 export default function CourseCard({ course }: { course: Course }) {
+  const courseHref = `/courses/${course.slug || course.id}`;
   return (
     <Card className="group flex h-full flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
       <Link
-        href={`/courses/${course.id}`}
+        href={courseHref}
         className="relative block h-44 overflow-hidden bg-gradient-to-br from-blue-100 to-indigo-100"
       >
         <Image
@@ -41,7 +42,7 @@ export default function CourseCard({ course }: { course: Course }) {
             {Number(course.avgRating ?? 0).toFixed(1)}
           </span>
         </div>
-        <Link href={`/courses/${course.id}`}>
+        <Link href={courseHref}>
           <h3 className="line-clamp-2 text-lg font-semibold group-hover:text-blue-700">
             {course.title}
           </h3>
@@ -58,7 +59,7 @@ export default function CourseCard({ course }: { course: Course }) {
             {price(course.price)}
           </span>
           <Button asChild size="sm">
-            <Link href={`/courses/${course.id}`}>View course</Link>
+            <Link href={courseHref}>View course</Link>
           </Button>
         </div>
       </CardContent>

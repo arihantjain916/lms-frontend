@@ -443,8 +443,8 @@ export default function CategoryPage() {
                               <Link
                                 href={
                                   isAuthenticated
-                                    ? `/courses/${course.id}`
-                                    : loginHref(`/courses/${course.id}`)
+                                    ? `/courses/${course.slug || course.id}`
+                                    : loginHref(`/courses/${course.slug || course.id}`)
                                 }
                               >
                                 Enroll Now
@@ -622,8 +622,8 @@ export default function CategoryPage() {
                                 <Link
                                   href={
                                     isAuthenticated
-                                      ? `/courses/${course.id}`
-                                      : loginHref(`/courses/${course.id}`)
+                                      ? `/courses/${course.slug || course.id}`
+                                      : loginHref(`/courses/${course.slug || course.id}`)
                                   }
                                 >
                                   Enroll Now

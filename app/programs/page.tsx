@@ -528,7 +528,7 @@ export default function ProgramsPage() {
                   >
                     {featuredPrograms.map((program) => (
                       <motion.div key={program.id} variants={fadeIn}>
-                        <Link href={`/programs/${program.id}`}>
+                        <Link href={`/programs/${program.slug || program.id}`}>
                           <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1 overflow-hidden">
                             <div className="relative">
                               <Image
@@ -735,7 +735,7 @@ export default function ProgramsPage() {
                           )}
                         {filteredPrograms.map((program) => (
                           <motion.div key={program.id} variants={fadeIn}>
-                            <Link href={`/programs/${program.id}`}>
+                            <Link href={`/programs/${program.slug || program.id}`}>
                               <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1 overflow-hidden">
                                 <div className="relative">
                                   <Image
@@ -831,7 +831,7 @@ export default function ProgramsPage() {
                       >
                         {filteredPrograms.map((program) => (
                           <motion.div key={program.id} variants={fadeIn}>
-                            <Link href={`/programs/${program.id}`}>
+                            <Link href={`/programs/${program.slug || program.id}`}>
                               <Card className="transition-all hover:shadow-md hover:-translate-y-1 overflow-hidden">
                                 <div className="flex flex-col md:flex-row">
                                   <div className="relative md:w-1/3">
