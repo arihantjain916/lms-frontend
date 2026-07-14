@@ -30,6 +30,7 @@ import {
   type AdminBlog,
   type AdminBlogInput,
 } from "@/lib/admin-api";
+import MarkdownContent from "@/components/markdown-content";
 
 const emptyForm: AdminBlogInput = {
   title: "",
@@ -335,6 +336,18 @@ export default function AdminBlogsPage() {
                     })
                   }
                 />
+                <p className="text-xs text-slate-500">
+                  Supports headings, links, lists, tables, blockquotes, images,
+                  inline code, and fenced code blocks.
+                </p>
+                {form.content.trim() && (
+                  <div className="mt-4 rounded-xl border bg-white p-5">
+                    <p className="mb-4 border-b pb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Content preview
+                    </p>
+                    <MarkdownContent source={form.content} />
+                  </div>
+                )}
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="post-content">Content</Label>

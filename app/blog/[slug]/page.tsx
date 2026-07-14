@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
+import MarkdownContent from "@/components/markdown-content";
 
 type User = {
   name?: string;
@@ -163,10 +164,7 @@ export default function BlogDetailsPage() {
 
       {/* ================= CONTENT ================= */}
       <section className="container max-w-4xl py-16">
-        <div
-          className="prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: blog.content }}
-        />
+        <MarkdownContent source={blog.content || ""} />
 
         {/* ================= AUTHOR ================= */}
         <Card className="mt-12">
