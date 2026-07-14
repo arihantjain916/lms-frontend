@@ -2,11 +2,9 @@ import type React from "react";
 import "@/app/globals.css";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import Header from "./header";
-import Footer from "./components/footer";
 import { Toaster } from "react-hot-toast";
-import AuthenticatedChatbot from "./components/authenticated-chatbot";
 import { AuthProvider } from "@/hooks/use-authenticated";
+import SiteChrome from "./components/site-chrome";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,10 +31,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             <Toaster />
-            <Header />
-            {children}
-            <AuthenticatedChatbot />
-            <Footer />
+            <SiteChrome>{children}</SiteChrome>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -1,43 +1,78 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import Link from "next/link"
-import { GraduationCap, ChevronRight, Menu, X, Search, Bell, ArrowRight, Clock, CheckCircle2, LogOut, UserCircle, BookOpen } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { motion } from "framer-motion"
-import { useAuth } from "@/hooks/use-authenticated"
-import { getSearchSuggestions } from "@/lib/content-api"
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import {
+  GraduationCap,
+  ChevronRight,
+  Menu,
+  X,
+  Search,
+  Bell,
+  ArrowRight,
+  Clock,
+  CheckCircle2,
+  LogOut,
+  UserCircle,
+  BookOpen,
+  LayoutDashboard,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/use-authenticated";
+import { getSearchSuggestions } from "@/lib/content-api";
 
 export default function Header() {
-  const { isAuthenticated, user, logout } = useAuth()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [suggestions, setSuggestions] = useState<{ type: string; title: string; slug: string }[]>([])
-  const notificationRef = useRef<HTMLDivElement>(null)
+  const { isAuthenticated, user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<
+    { type: string; title: string; slug: string }[]
+  >([]);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   // Close notifications when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setIsNotificationsOpen(false)
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsOpen(false);
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
-    if (searchQuery.trim().length < 2) { setSuggestions([]); return }
-    let active = true
-    const timer = window.setTimeout(() => getSearchSuggestions(searchQuery.trim()).then((items) => { if (active) setSuggestions(items.slice(0, 8)) }).catch(() => { if (active) setSuggestions([]) }), 250)
-    return () => { active = false; window.clearTimeout(timer) }
-  }, [searchQuery])
+    if (searchQuery.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    let active = true;
+    const timer = window.setTimeout(
+      () =>
+        getSearchSuggestions(searchQuery.trim())
+          .then((items) => {
+            if (active) setSuggestions(items.slice(0, 8));
+          })
+          .catch(() => {
+            if (active) setSuggestions([]);
+          }),
+      250,
+    );
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
   const notifications = [
     {
@@ -61,7 +96,7 @@ export default function Header() {
       time: "1 day ago",
       read: true,
     },
-  ]
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -88,16 +123,28 @@ export default function Header() {
                 >
                   All Categories
                 </Link>
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Web Development
                 </Link>
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Data Science
                 </Link>
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Business
                 </Link>
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Design
                 </Link>
                 <div className="border-t my-1"></div>
@@ -119,13 +166,22 @@ export default function Header() {
             </button>
             <div className="absolute left-0 top-full mt-2 w-56 rounded-md border bg-background shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
               <div className="p-2">
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Degree Programs
                 </Link>
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Certificates
                 </Link>
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Professional Training
                 </Link>
                 <div className="border-t my-1"></div>
@@ -147,7 +203,10 @@ export default function Header() {
             </button>
             <div className="absolute left-0 top-full mt-2 w-56 rounded-md border bg-background shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
               <div className="p-2">
-                <Link href="/blog" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="/blog"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   Blog
                 </Link>
                 <Link
@@ -162,7 +221,10 @@ export default function Header() {
                 >
                   Webinars
                 </Link>
-                <Link href="#" className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors">
+                <Link
+                  href="#"
+                  className="block rounded-md px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
                   E-books
                 </Link>
                 <div className="border-t my-1"></div>
@@ -177,16 +239,26 @@ export default function Header() {
             </div>
           </div>
 
-          <Link href="/about" className="text-sm font-medium hover:text-blue-600 transition-colors">
+          <Link
+            href="/about"
+            className="text-sm font-medium hover:text-blue-600 transition-colors"
+          >
             About Us
           </Link>
-          <Link href="/contact" className="text-sm font-medium hover:text-blue-600 transition-colors">
+          <Link
+            href="/contact"
+            className="text-sm font-medium hover:text-blue-600 transition-colors"
+          >
             Contact
           </Link>
         </nav>
 
         <div className="flex items-center gap-4">
-          <form action="/search" method="get" className="hidden md:flex relative">
+          <form
+            action="/search"
+            method="get"
+            className="hidden md:flex relative"
+          >
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
@@ -196,107 +268,183 @@ export default function Header() {
               placeholder="Search courses..."
               className="w-[200px] pl-9 rounded-full bg-muted focus-visible:ring-blue-500"
             />
-            {suggestions.length > 0 && <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-md border bg-background shadow-lg">{suggestions.map((item) => <Link key={`${item.type}-${item.slug}`} href={`/${item.type === "course" ? "courses" : item.type === "tutorial" ? "tutorials" : item.type === "webinar" ? "webinars" : "blog"}/${item.slug}`} onClick={() => setSuggestions([])} className="block border-b px-4 py-3 text-sm last:border-0 hover:bg-muted"><span className="mr-2 capitalize text-muted-foreground">{item.type}</span>{item.title}</Link>)}</div>}
+            {suggestions.length > 0 && (
+              <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-md border bg-background shadow-lg">
+                {suggestions.map((item) => (
+                  <Link
+                    key={`${item.type}-${item.slug}`}
+                    href={`/${item.type === "course" ? "courses" : item.type === "tutorial" ? "tutorials" : item.type === "webinar" ? "webinars" : "blog"}/${item.slug}`}
+                    onClick={() => setSuggestions([])}
+                    className="block border-b px-4 py-3 text-sm last:border-0 hover:bg-muted"
+                  >
+                    <span className="mr-2 capitalize text-muted-foreground">
+                      {item.type}
+                    </span>
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
+            )}
           </form>
 
           {/* Notification Bell */}
-          {isAuthenticated && <div className="relative" ref={notificationRef}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative hidden md:flex"
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            >
-              <Bell className="h-5 w-5" />
-              <motion.span
-                className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-medium text-white"
-                initial={{ scale: 0.8 }}
-                animate={{ scale: [0.8, 1.2, 1] }}
-                transition={{ duration: 0.3, times: [0, 0.5, 1] }}
+          {isAuthenticated && (
+            <div className="relative" ref={notificationRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hidden md:flex"
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
               >
-                {notifications.filter((n) => !n.read).length}
-              </motion.span>
-            </Button>
+                <Bell className="h-5 w-5" />
+                <motion.span
+                  className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-medium text-white"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: [0.8, 1.2, 1] }}
+                  transition={{ duration: 0.3, times: [0, 0.5, 1] }}
+                >
+                  {notifications.filter((n) => !n.read).length}
+                </motion.span>
+              </Button>
 
-            {/* Notification Dropdown */}
-            {isNotificationsOpen && (
-              <motion.div
-                className="absolute right-0 mt-2 w-80 rounded-md border bg-background shadow-lg z-50 overflow-hidden"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="p-4 border-b">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">Notifications</h3>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-600 hover:bg-blue-100">
-                      {notifications.filter((n) => !n.read).length} New
-                    </Badge>
-                  </div>
-                </div>
-                <div className="max-h-[320px] overflow-y-auto">
-                  {notifications.length > 0 ? (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b hover:bg-muted/50 transition-colors cursor-pointer ${!notification.read ? "bg-blue-50/50" : ""}`}
+              {/* Notification Dropdown */}
+              {isNotificationsOpen && (
+                <motion.div
+                  className="absolute right-0 mt-2 w-80 rounded-md border bg-background shadow-lg z-50 overflow-hidden"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="p-4 border-b">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">Notifications</h3>
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-600 hover:bg-blue-100"
                       >
-                        <div className="flex gap-3">
-                          <div
-                            className={`mt-1 rounded-full p-1 ${!notification.read ? "bg-blue-100 text-blue-600" : "bg-muted text-muted-foreground"}`}
-                          >
-                            {!notification.read ? <Bell className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium text-sm">{notification.title}</p>
-                              {!notification.read && <span className="h-2 w-2 rounded-full bg-blue-600"></span>}
+                        {notifications.filter((n) => !n.read).length} New
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 border-b hover:bg-muted/50 transition-colors cursor-pointer ${!notification.read ? "bg-blue-50/50" : ""}`}
+                        >
+                          <div className="flex gap-3">
+                            <div
+                              className={`mt-1 rounded-full p-1 ${!notification.read ? "bg-blue-100 text-blue-600" : "bg-muted text-muted-foreground"}`}
+                            >
+                              {!notification.read ? (
+                                <Bell className="h-4 w-4" />
+                              ) : (
+                                <CheckCircle2 className="h-4 w-4" />
+                              )}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
-                            <div className="flex items-center text-xs text-muted-foreground mt-2">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {notification.time}
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <p className="font-medium text-sm">
+                                  {notification.title}
+                                </p>
+                                {!notification.read && (
+                                  <span className="h-2 w-2 rounded-full bg-blue-600"></span>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center text-xs text-muted-foreground mt-2">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {notification.time}
+                              </div>
                             </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-muted-foreground">
+                        <p>No notifications yet</p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="p-4 text-center text-muted-foreground">
-                      <p>No notifications yet</p>
-                    </div>
-                  )}
-                </div>
-                <div className="p-2 border-t bg-muted/20">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    View all notifications
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </div>}
+                    )}
+                  </div>
+                  <div className="p-2 border-t bg-muted/20">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      View all notifications
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
           {isAuthenticated ? (
             <div className="hidden items-center gap-2 md:flex">
-              <Button asChild variant="ghost"><Link href="/my-learning"><BookOpen className="mr-2 h-4 w-4" />My learning</Link></Button>
-              <Button asChild variant="outline" className="border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-                <Link href="/account"><UserCircle className="mr-2 h-4 w-4" />{user?.name || "Account"}</Link>
+              {user?.role?.toUpperCase() === "ADMIN" && (
+                <Button asChild variant="ghost">
+                  <Link href="/admin">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
+              <Button asChild variant="ghost">
+                <Link href="/my-learning">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  My learning
+                </Link>
               </Button>
-              <Button variant="ghost" size="icon" title="Log out" onClick={async () => { await logout(); window.location.href = "/" }}>
+              <Button
+                asChild
+                variant="outline"
+                className="border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              >
+                <Link href="/account">
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  {user?.name || "Account"}
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Log out"
+                onClick={async () => {
+                  await logout();
+                  window.location.href = "/";
+                }}
+              >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
           ) : (
             <>
-              <Button asChild variant="outline" className="hidden md:inline-flex border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Link href="/login">Log In</Link></Button>
-              <Button asChild className="bg-blue-600 hover:bg-blue-700"><Link href="/register">Sign Up</Link></Button>
+              <Button
+                asChild
+                variant="outline"
+                className="hidden md:inline-flex border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              >
+                <Link href="/login">Log In</Link>
+              </Button>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <Link href="/register">Sign Up</Link>
+              </Button>
             </>
           )}
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
@@ -313,36 +461,58 @@ export default function Header() {
           <div className="container py-4 flex flex-col gap-4">
             <form action="/search" method="get" className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input type="search" name="q" placeholder="Search courses..." className="w-full pl-9 bg-muted" />
+              <Input
+                type="search"
+                name="q"
+                placeholder="Search courses..."
+                className="w-full pl-9 bg-muted"
+              />
             </form>
 
-            {isAuthenticated && <div className="border rounded-md overflow-hidden">
-              <Link
-                href="/categories"
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
-              >
-                <span className="text-sm font-medium">All Categories</span>
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-              <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50" onClick={() => {}}>
-                <span className="text-sm font-medium">Courses</span>
-                <ChevronRight className="h-4 w-4" />
+            {isAuthenticated && (
+              <div className="border rounded-md overflow-hidden">
+                <Link
+                  href="/categories"
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
+                >
+                  <span className="text-sm font-medium">All Categories</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+                <div
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
+                  onClick={() => {}}
+                >
+                  <span className="text-sm font-medium">Courses</span>
+                  <ChevronRight className="h-4 w-4" />
+                </div>
+                <div
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
+                  onClick={() => {}}
+                >
+                  <span className="text-sm font-medium">Programs</span>
+                  <ChevronRight className="h-4 w-4" />
+                </div>
+                <div
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50"
+                  onClick={() => {}}
+                >
+                  <span className="text-sm font-medium">Resources</span>
+                  <ChevronRight className="h-4 w-4" />
+                </div>
+                <Link
+                  href="#"
+                  className="block p-3 text-sm font-medium hover:bg-blue-50"
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="#"
+                  className="block p-3 text-sm font-medium hover:bg-blue-50"
+                >
+                  Contact
+                </Link>
               </div>
-              <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50" onClick={() => {}}>
-                <span className="text-sm font-medium">Programs</span>
-                <ChevronRight className="h-4 w-4" />
-              </div>
-              <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50" onClick={() => {}}>
-                <span className="text-sm font-medium">Resources</span>
-                <ChevronRight className="h-4 w-4" />
-              </div>
-              <Link href="#" className="block p-3 text-sm font-medium hover:bg-blue-50">
-                About Us
-              </Link>
-              <Link href="#" className="block p-3 text-sm font-medium hover:bg-blue-50">
-                Contact
-              </Link>
-            </div>}
+            )}
 
             {/* Mobile Notifications */}
             <div className="border rounded-md overflow-hidden">
@@ -362,7 +532,9 @@ export default function Header() {
                     className={`p-3 border-t hover:bg-muted/50 transition-colors ${!notification.read ? "bg-blue-50/50" : ""}`}
                   >
                     <p className="font-medium text-sm">{notification.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {notification.message}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -378,20 +550,52 @@ export default function Header() {
             </div>
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-2 mt-2">
-                <Button asChild variant="outline" className="flex-1"><Link href="/my-learning">My learning</Link></Button>
-                <Button asChild variant="outline" className="flex-1"><Link href="/account">Account</Link></Button>
-                <Button variant="destructive" className="flex-1" onClick={async () => { await logout(); window.location.href = "/" }}>Log out</Button>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {user?.role?.toUpperCase() === "ADMIN" && (
+                  <Button asChild variant="outline" className="col-span-2">
+                    <Link href="/admin">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Admin workspace
+                    </Link>
+                  </Button>
+                )}
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/my-learning">My learning</Link>
+                </Button>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/account">Account</Link>
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="col-span-2"
+                  onClick={async () => {
+                    await logout();
+                    window.location.href = "/";
+                  }}
+                >
+                  Log out
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2 mt-2">
-                <Button asChild variant="outline" className="flex-1 border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Link href="/login">Log In</Link></Button>
-                <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700"><Link href="/register">Sign Up</Link></Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="flex-1 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  <Link href="/login">Log In</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Link href="/register">Sign Up</Link>
+                </Button>
               </div>
             )}
           </div>
         </motion.div>
       )}
     </header>
-  )
+  );
 }
