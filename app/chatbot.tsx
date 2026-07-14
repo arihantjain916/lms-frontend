@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect, Ref } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { FaCommentDots } from "react-icons/fa";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -140,21 +140,25 @@ const Chatbot = () => {
         const res = await instance.get(`/chat`);
         const chats = res?.data;
 
-        chats?.forEach((chatItem: { prompt: string; response: string }) => {
-          if (chatItem.prompt) {
-            setMessages((prev) => [
-              ...prev,
-              { from: "user", text: chatItem.prompt },
-            ]);
-          }
+        const chatMessages = chats?.flatMap(
+          (chatItem: { prompt: string; response: string }) => {
+            const loadedMessages: { from: string; text: string }[] = [];
 
-          if (chatItem.response) {
-            setMessages((prev) => [
-              ...prev,
-              { from: "bot", text: chatItem.response },
-            ]);
-          }
-        });
+            if (chatItem.prompt) {
+              loadedMessages.push({ from: "user", text: chatItem.prompt });
+            }
+
+            if (chatItem.response) {
+              loadedMessages.push({ from: "bot", text: chatItem.response });
+            }
+
+            return loadedMessages;
+          },
+        );
+
+        if (chatMessages?.length) {
+          setMessages((prev) => [...prev, ...chatMessages]);
+        }
       } catch (e) {
         console.log("e", e);
       }
@@ -193,11 +197,17 @@ const Chatbot = () => {
   // }, [stompRef])
 
   // Scroll to bottom whenever messages update
-  useEffect(() => {
-    if (bodyRef.current) {
-      bodyRef!.current!.scrollTop = bodyRef!.current!.scrollHeight;
-    }
-  }, [messages, isTyping]);
+  useLayoutEffect(() => {
+    if (!isOpen || !bodyRef.current) return;
+
+    const animationFrame = requestAnimationFrame(() => {
+      if (bodyRef.current) {
+        bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+      }
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [isOpen, messages, isTyping]);
 
   // Send welcome message when chat opens
   useEffect(() => {
@@ -264,8 +274,14 @@ const Chatbot = () => {
             {isTyping && (
               <div className="bg-gray-200 self-start p-3 rounded-2xl shadow-md flex items-center gap-1">
                 <span className="typing-dot" />
-                <span className="typing-dot" style={{ animationDelay: "0.2s" }} />
-                <span className="typing-dot" style={{ animationDelay: "0.4s" }} />
+                <span
+                  className="typing-dot"
+                  style={{ animationDelay: "0.2s" }}
+                />
+                <span
+                  className="typing-dot"
+                  style={{ animationDelay: "0.4s" }}
+                />
               </div>
             )}
           </div>
