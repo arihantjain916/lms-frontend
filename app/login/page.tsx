@@ -26,11 +26,32 @@ import toast from "react-hot-toast";
 import { notifyAuthStateChanged } from "@/hooks/use-authenticated";
 import { safeReturnPath } from "@/lib/auth-navigation";
 
+type AccountStatus = {
+  isVerified?: boolean;
+  isActive?: boolean;
+  isBanned?: boolean;
+  isDeleted?: boolean;
+};
+
+function getAccountStatus(payload: any): AccountStatus | null {
+  const value = payload?.accountStatus || payload?.data;
+  if (!value || typeof value !== "object") return null;
+  if (
+    !("isVerified" in value) &&
+    !("isActive" in value) &&
+    !("isBanned" in value) &&
+    !("isDeleted" in value)
+  )
+    return null;
+  return value as AccountStatus;
+}
+
 export default function LoginPage() {
   // const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [accountStatus, setAccountStatus] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -76,6 +97,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAccountStatus("");
 
     if (!validateForm()) return;
 
@@ -91,6 +113,26 @@ export default function LoginPage() {
         return toast.error(res?.message || "Something went wrong");
       }
 
+      const status = getAccountStatus(res);
+      if (status?.isDeleted) {
+        setAccountStatus("Account is deleted. Contact admin.");
+        return;
+      }
+      if (status?.isBanned) {
+        setAccountStatus("Account is banned. Contact admin.");
+        return;
+      }
+      if (status?.isActive === false) {
+        setAccountStatus("Account is inactive. Contact admin.");
+        return;
+      }
+      if (status?.isVerified === false) {
+        router.replace(
+          `/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}&pending=1`,
+        );
+        return;
+      }
+
       localStorage.setItem("token", res?.token);
       notifyAuthStateChanged();
 
@@ -101,6 +143,28 @@ export default function LoginPage() {
       );
       router.replace(returnTo);
     } catch (error: any) {
+      const status = getAccountStatus(error);
+      const email = formData.email.trim().toLowerCase();
+
+      if (status?.isDeleted) {
+        setAccountStatus("Account is deleted. Contact admin.");
+        return;
+      }
+      if (status?.isBanned) {
+        setAccountStatus("Account is banned. Contact admin.");
+        return;
+      }
+      if (status?.isActive === false) {
+        setAccountStatus("Account is inactive. Contact admin.");
+        return;
+      }
+      if (status?.isVerified === false) {
+        router.replace(
+          `/verify-email?email=${encodeURIComponent(email)}&pending=1`,
+        );
+        return;
+      }
+
       toast.error(error?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
@@ -142,6 +206,12 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {accountStatus && (
+                <div role="alert" className="flex gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{accountStatus}</span>
+                </div>
+              )}
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
                   Email or username

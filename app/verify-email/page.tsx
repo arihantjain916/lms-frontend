@@ -40,6 +40,13 @@ export default function VerifyEmailPage() {
         );
         return;
       }
+      if (registeredEmail && search.get("pending") === "1") {
+        setStatus("sent");
+        setMessage(
+          `Your account is not verified. Check ${registeredEmail} for the verification link or request a new one below.`,
+        );
+        return;
+      }
       setStatus("error");
       setMessage("This verification link is missing its security token.");
       return;
@@ -135,6 +142,7 @@ export default function VerifyEmailPage() {
                   id="email"
                   type="email"
                   required
+                  disabled={true}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
