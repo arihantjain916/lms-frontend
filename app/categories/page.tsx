@@ -46,10 +46,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import instance from "@/helper/axios";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 import { getIcon } from "@/lib/getIcon";
 import toast from "react-hot-toast";
 
 export default function CategoriesPage() {
+  const restoreKey = usePageRestoreKey();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -89,7 +91,7 @@ export default function CategoriesPage() {
       }
     }
     handleFetchAllCategories();
-  }, []);
+  }, [restoreKey]);
 
   // Category data with icons
   // const allCategories = [

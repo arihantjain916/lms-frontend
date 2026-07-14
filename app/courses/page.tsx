@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { BookOpen, Search, SlidersHorizontal } from "lucide-react";
 import instance from "@/helper/axios";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 import { Course, getCourses, getFeaturedCourses } from "@/lib/course-api";
 import CourseCard from "./course-card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import {
 type Category = { id: string; name: string };
 
 export default function CoursesPage() {
+  const restoreKey = usePageRestoreKey();
   const [courses, setCourses] = useState<Course[]>([]);
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -85,7 +87,7 @@ export default function CoursesPage() {
 
   useEffect(() => {
     loadCourses();
-  }, [loadCourses]);
+  }, [loadCourses, restoreKey]);
   useEffect(() => {
     getFeaturedCourses(3)
       .then(setFeaturedCourses)
@@ -96,7 +98,7 @@ export default function CoursesPage() {
         setCategories(Array.isArray(response?.data) ? response.data : []),
       )
       .catch(() => setCategories([]));
-  }, []);
+  }, [restoreKey]);
 
   function resetFilters() {
     setQuery("");

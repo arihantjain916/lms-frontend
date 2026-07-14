@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 import {
   Award,
   BookOpen,
@@ -53,6 +54,7 @@ type Tutorial = {
 };
 
 export default function TutorialDetailPage() {
+  const restoreKey = usePageRestoreKey();
   const { slug } = useParams<{ slug: string }>();
   const [tutorial, setTutorial] = useState<Tutorial | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function TutorialDetailPage() {
 
   useEffect(() => {
     loadTutorial();
-  }, [loadTutorial]);
+  }, [loadTutorial, restoreKey]);
 
   if (loading)
     return (

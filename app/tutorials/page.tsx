@@ -35,8 +35,10 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTutorials } from "@/lib/content-api";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 export default function TutorialsPage() {
+  const restoreKey = usePageRestoreKey();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -326,7 +328,7 @@ export default function TutorialsPage() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [searchQuery, page]);
+  }, [page, restoreKey, searchQuery]);
 
   const tutorials = apiTutorials;
 

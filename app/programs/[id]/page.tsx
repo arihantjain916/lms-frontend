@@ -19,6 +19,7 @@ import instance from "@/helper/axios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 type Program = {
   id: string | number;
@@ -45,6 +46,7 @@ type Program = {
 
 export default function ProgramDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const restoreKey = usePageRestoreKey();
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
@@ -71,7 +73,7 @@ export default function ProgramDetailPage() {
 
   useEffect(() => {
     loadProgram();
-  }, [loadProgram]);
+  }, [loadProgram, restoreKey]);
 
   async function apply() {
     if (!program) return;

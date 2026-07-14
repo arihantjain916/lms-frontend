@@ -19,11 +19,13 @@ import {
 } from "@/lib/catalog-api";
 import { useAuth } from "@/hooks/use-authenticated";
 import { loginHref } from "@/lib/auth-navigation";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 export default function WebinarDetailPage() {
   const slug = String(useParams().slug);
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const restoreKey = usePageRestoreKey();
   const { toast } = useToast();
   const [webinar, setWebinar] = useState<Webinar | null>(null);
   const [resources, setResources] = useState<WebinarResource[]>([]);
@@ -40,7 +42,7 @@ export default function WebinarDetailPage() {
         }),
       )
       .finally(() => setLoading(false));
-  }, [slug, toast]);
+  }, [restoreKey, slug, toast]);
   async function register() {
     if (!webinar) return;
     if (!isAuthenticated) {

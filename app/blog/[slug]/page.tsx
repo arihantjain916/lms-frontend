@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 type User = {
   name?: string;
@@ -25,6 +26,7 @@ type Comment = {
 
 export default function BlogDetailsPage() {
   const { slug } = useParams<{ slug: string }>();
+  const restoreKey = usePageRestoreKey();
 
   const [blog, setBlog] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export default function BlogDetailsPage() {
     };
 
     fetchBlog();
-  }, [slug]);
+  }, [restoreKey, slug]);
 
   /* ================= FETCH COMMENTS ================= */
 
@@ -79,7 +81,7 @@ export default function BlogDetailsPage() {
     if (!blog?.id) return;
 
     fetchComments(blog?.id);
-  }, [blog?.id]);
+  }, [blog?.id, restoreKey]);
 
   /* ================= ADD COMMENT ================= */
   const handleCommentSubmit = async () => {

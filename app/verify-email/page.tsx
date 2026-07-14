@@ -114,8 +114,8 @@ export default function VerifyEmailPage() {
               : status === "verifying"
                 ? "Verifying email"
                 : status === "success"
-                ? "Email verified"
-                : "Verification failed"}
+                  ? "Email verified"
+                  : "Verification failed"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">{message}</p>
         </CardHeader>

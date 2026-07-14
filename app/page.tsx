@@ -374,7 +374,7 @@ export default function HomePage() {
                 return (
                   <motion.div key={index} variants={fadeIn}>
                     {/* {"arihant"} */}
-                    <Link href="#">
+                    <Link href={`/categories/${category.slug}`}>
                       <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1">
                         <CardContent className="p-6">
                           <div

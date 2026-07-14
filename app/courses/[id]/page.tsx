@@ -67,6 +67,7 @@ import {
   type CourseQuestion,
 } from "@/lib/content-api";
 import { loginHref } from "@/lib/auth-navigation";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 function formatPrice(value?: number | null) {
   if (!value) return "Free";
@@ -101,6 +102,7 @@ export default function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const restoreKey = usePageRestoreKey();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [instructor, setInstructor] = useState<Instructor | null>(null);
@@ -171,7 +173,7 @@ export default function CourseDetailPage() {
   useEffect(() => {
     loadPage();
     loadQuestions();
-  }, [loadPage, loadQuestions]);
+  }, [loadPage, loadQuestions, restoreKey]);
   useEffect(() => {
     if (id) trackCourseView(id).catch(() => undefined);
   }, [id]);

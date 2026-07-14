@@ -39,10 +39,12 @@ import instance from "@/helper/axios";
 import { getIcon } from "@/lib/getIcon";
 import { useAuth } from "@/hooks/use-authenticated";
 import { loginHref } from "@/lib/auth-navigation";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 export default function CategoryPage() {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useAuth();
+  const restoreKey = usePageRestoreKey();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryData, setCategoryData] = useState<any>({});
   const [courses, setCourses] = useState<any[]>([]);
@@ -88,7 +90,7 @@ export default function CategoryPage() {
       }
     }
     fetchCategoryDetails();
-  }, [id]);
+  }, [id, restoreKey]);
 
   useEffect(() => {
     if (!categoryData?.id) return;
@@ -107,7 +109,7 @@ export default function CategoryPage() {
       }
     }
     handleFetchAllCourses();
-  }, [categoryData]);
+  }, [categoryData?.id, restoreKey]);
   // Mock category data
   // const categoryData = {
   //   id: Number.parseInt(params.id),

@@ -20,9 +20,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
 import instance from "@/helper/axios";
 import { useRouter, useSearchParams } from "next/navigation";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 export default function BlogPage() {
   const router = useRouter();
+  const restoreKey = usePageRestoreKey();
   const searchParams = useSearchParams();
 
   const search = searchParams.get("page");
@@ -83,13 +85,13 @@ export default function BlogPage() {
         }
         console.log("res?.data", res?.data);
         setAllBlogs(res?.data);
-        setTotalPages(res?.data?.totalPages);
+        setTotalPages(Number(res?.totalPages || 1));
       } catch (e) {
         toast.error("Something went wrong");
       }
     }
     handleGetAllBlogs();
-  }, [filter, page]);
+  }, [filter, page, restoreKey]);
 
   useEffect(() => {
     console.log("blogs", blogs);

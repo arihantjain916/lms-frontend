@@ -32,8 +32,10 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useToast } from "@/hooks/use-toast";
 import { getPrograms } from "@/lib/content-api";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 export default function ProgramsPage() {
+  const restoreKey = usePageRestoreKey();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
@@ -334,7 +336,7 @@ export default function ProgramsPage() {
     return () => {
       active = false;
     };
-  }, [page, toast]);
+  }, [page, restoreKey, toast]);
 
   const programs = apiPrograms;
 

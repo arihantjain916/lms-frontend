@@ -17,11 +17,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-authenticated";
 import { useRouter } from "next/navigation";
 import { loginHref } from "@/lib/auth-navigation";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 export default function WebinarsPage() {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const restoreKey = usePageRestoreKey();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("upcoming");
   const [page, setPage] = useState(1);
@@ -60,7 +62,7 @@ export default function WebinarsPage() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [page, query, status]);
+  }, [page, query, restoreKey, status]);
   async function register(item: Webinar) {
     if (!isAuthenticated) {
       router.push(loginHref(`/webinars/${item.slug}`));
