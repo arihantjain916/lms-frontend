@@ -47,9 +47,11 @@ import instance from "@/helper/axios";
 import { getIcon } from "@/lib/getIcon";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
 export default function HomePage() {
   const router = useRouter();
+  const restoreKey = usePageRestoreKey();
   const isMobile = useMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -81,7 +83,8 @@ export default function HomePage() {
         if (!res?.status) {
           return toast.error("Something went wrong");
         }
-        const topCategories = [...res?.data]
+        const categories = Array.isArray(res?.data) ? res.data : [];
+        const topCategories = [...categories]
           .sort((a, b) => b.courseCount - a.courseCount)
           .slice(0, 4);
 
@@ -91,7 +94,7 @@ export default function HomePage() {
       }
     }
     handleFetchAllCategories();
-  }, []);
+  }, [restoreKey]);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,14 +368,13 @@ export default function HomePage() {
             <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-2"
               initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
+              animate="visible"
               variants={staggerContainer}
             >
               {courseCategories.map((category: any, index: number) => {
                 const { Icon, bg } = getIcon(category.icon);
                 return (
-                  <motion.div key={index} variants={fadeIn}>
+                  <motion.div key={category.id || category.slug || index} variants={fadeIn}>
                     {/* {"arihant"} */}
                     <Link href={`/categories/${category.slug}`}>
                       <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1">
