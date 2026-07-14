@@ -160,7 +160,7 @@ const Chatbot = () => {
 
   const handleSend = () => {
     if (!input.trim()) return;
-    if (!stompRef.current) return;
+    if (!stompRef.current?.connected) return;
 
     setMessages([...messages, { from: "user", text: input }]);
     setInput("");
