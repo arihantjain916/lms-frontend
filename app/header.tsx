@@ -96,11 +96,12 @@ export default function Header() {
   }, []);
 
   const notifications: { id: string; title: string; message: string; time: string; read: boolean }[] = [];
+  const unreadNotifications = notifications.filter((item) => !item.read).length;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mx-auto flex h-[68px] w-full max-w-[1520px] items-center gap-4 px-4 sm:px-6 lg:gap-6">
+        <div className="flex shrink-0 items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-blue-600" />
             <span className="text-xl font-bold">EduPortal</span>
@@ -108,7 +109,7 @@ export default function Header() {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden shrink-0 items-center gap-5 2xl:flex">
           <div className="relative group">
             <button className="flex items-center gap-1 text-sm font-medium hover:text-blue-600 transition-colors">
               Courses
@@ -224,11 +225,11 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
           <form
             action="/search"
             method="get"
-            className="hidden md:flex relative"
+            className="relative hidden lg:flex"
           >
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -237,7 +238,7 @@ export default function Header() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search courses..."
-              className="w-[200px] pl-9 rounded-full bg-muted focus-visible:ring-blue-500"
+              className="w-[190px] rounded-full bg-muted pl-9 focus-visible:ring-blue-500 xl:w-[220px]"
             />
             {suggestions.length > 0 && (
               <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-md border bg-background shadow-lg">
@@ -264,18 +265,20 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative hidden md:flex"
+                className="relative hidden lg:flex"
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
               >
                 <Bell className="h-5 w-5" />
-                <motion.span
-                  className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-medium text-white"
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: [0.8, 1.2, 1] }}
-                  transition={{ duration: 0.3, times: [0, 0.5, 1] }}
-                >
-                  {notifications.filter((n) => !n.read).length}
-                </motion.span>
+                {unreadNotifications > 0 && (
+                  <motion.span
+                    className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-medium text-white"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: [0.8, 1.2, 1] }}
+                    transition={{ duration: 0.3, times: [0, 0.5, 1] }}
+                  >
+                    {unreadNotifications}
+                  </motion.span>
+                )}
               </Button>
 
               {/* Notification Dropdown */}
@@ -289,12 +292,11 @@ export default function Header() {
                   <div className="p-4 border-b">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold">Notifications</h3>
-                      <Badge
-                        variant="outline"
-                        className="bg-blue-50 text-blue-600 hover:bg-blue-100"
-                      >
-                        {notifications.filter((n) => !n.read).length} New
-                      </Badge>
+                      {unreadNotifications > 0 && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-600">
+                          {unreadNotifications} new
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="max-h-[320px] overflow-y-auto">
@@ -340,21 +342,12 @@ export default function Header() {
                       </div>
                     )}
                   </div>
-                  <div className="p-2 border-t bg-muted/20">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    >
-                      View all notifications
-                    </Button>
-                  </div>
                 </motion.div>
               )}
             </div>
           )}
           {isAuthenticated ? (
-            <div className="hidden items-center gap-2 md:flex">
+            <div className="hidden items-center gap-1 xl:flex">
               {user?.role?.toUpperCase() === "ADMIN" && (
                 <Button asChild variant="ghost">
                   <Link href="/admin">
@@ -372,11 +365,11 @@ export default function Header() {
               <Button
                 asChild
                 variant="outline"
-                className="border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                className="max-w-[170px] border-blue-200 hover:bg-blue-50 hover:text-blue-700"
               >
                 <Link href="/account">
                   <UserCircle className="mr-2 h-4 w-4" />
-                  {user?.name || "Account"}
+                  <span className="truncate">{user?.name || "Account"}</span>
                 </Link>
               </Button>
               <Button
@@ -396,11 +389,11 @@ export default function Header() {
               <Button
                 asChild
                 variant="outline"
-                className="hidden md:inline-flex border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                className="hidden border-blue-200 hover:bg-blue-50 hover:text-blue-700 xl:inline-flex"
               >
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Button asChild className="hidden bg-blue-600 hover:bg-blue-700 sm:inline-flex">
                 <Link href="/register">Sign Up</Link>
               </Button>
             </>
@@ -408,7 +401,7 @@ export default function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="2xl:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? (
@@ -423,7 +416,7 @@ export default function Header() {
       {/* Mobile Navigation */}
       {isMenuOpen && (
         <motion.div
-          className="md:hidden"
+          className="2xl:hidden"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
@@ -497,9 +490,11 @@ export default function Header() {
                   <Bell className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium">Notifications</span>
                 </div>
-                <Badge variant="outline" className="bg-blue-100 text-blue-600">
-                  {notifications.filter((n) => !n.read).length} New
-                </Badge>
+                {unreadNotifications > 0 && (
+                  <Badge variant="outline" className="bg-blue-100 text-blue-600">
+                    {unreadNotifications} new
+                  </Badge>
+                )}
               </div>
               <div className="max-h-[200px] overflow-y-auto">
                 {notifications.length ? notifications.slice(0, 2).map((notification) => (
@@ -513,15 +508,6 @@ export default function Header() {
                     </p>
                   </div>
                 )) : <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet</p>}
-              </div>
-              <div className="p-2 border-t bg-muted/20">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                >
-                  View all
-                </Button>
               </div>
             </div>}
 
