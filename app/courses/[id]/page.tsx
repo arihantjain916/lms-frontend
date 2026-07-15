@@ -40,7 +40,6 @@ import {
   createCheckout,
   enrollCourse,
   getCourseProgress,
-  getMyEnrollment,
   getWishlist,
   removeFromWishlist,
   unenrollCourse,
@@ -129,7 +128,11 @@ export default function CourseDetailPage() {
   const loadQuestions = useCallback(async () => {
     if (!resolvedCourseId) return;
     try {
-      const result = await getCourseQuestions(resolvedCourseId, questionPage, 10);
+      const result = await getCourseQuestions(
+        resolvedCourseId,
+        questionPage,
+        10,
+      );
       setQuestions(result.data);
       setQuestionPages(Math.max(result.totalPages, 1));
     } catch {
@@ -151,6 +154,7 @@ export default function CourseDetailPage() {
     try {
       const courseResult = await getCourse(id);
       setCourse(courseResult);
+      setEnrolled(Boolean(courseResult.isEnrolled));
       const courseId = courseResult.id;
       const results = await Promise.allSettled([
         getCourseCurriculum(courseId, 1, 100),
@@ -179,7 +183,8 @@ export default function CourseDetailPage() {
     loadQuestions();
   }, [loadQuestions, restoreKey]);
   useEffect(() => {
-    if (resolvedCourseId) trackCourseView(resolvedCourseId).catch(() => undefined);
+    if (resolvedCourseId)
+      trackCourseView(resolvedCourseId).catch(() => undefined);
   }, [resolvedCourseId]);
 
   async function submitQuestion(event: FormEvent) {
@@ -211,25 +216,24 @@ export default function CourseDetailPage() {
       setCourseProgress(null);
       return;
     }
-    getMyEnrollment(resolvedCourseId)
-      .then(() => {
-        setEnrolled(true);
-        getCourseProgress(resolvedCourseId)
-          .then(setCourseProgress)
-          .catch(() => setCourseProgress(null));
-      })
-      .catch(() => {
-        setEnrolled(false);
-        setCourseProgress(null);
-      });
+    setEnrolled(Boolean(course?.isEnrolled));
+    if (course?.isEnrolled) {
+      getCourseProgress(resolvedCourseId)
+        .then(setCourseProgress)
+        .catch(() => setCourseProgress(null));
+    } else {
+      setCourseProgress(null);
+    }
     getWishlist(1, 100)
       .then((result) =>
         setWishlisted(
-          result.data.some((item) => String(item.course.id) === String(resolvedCourseId)),
+          result.data.some(
+            (item) => String(item.course.id) === String(resolvedCourseId),
+          ),
         ),
       )
       .catch(() => setWishlisted(false));
-  }, [isAuthenticated, resolvedCourseId]);
+  }, [course?.isEnrolled, isAuthenticated, resolvedCourseId]);
 
   async function submitReview(event: FormEvent) {
     event.preventDefault();

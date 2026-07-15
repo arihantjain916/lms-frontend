@@ -16,6 +16,9 @@ function price(value?: number | null) {
 
 export default function CourseCard({ course }: { course: Course }) {
   const courseHref = `/courses/${course.slug || course.id}`;
+  const actionHref = course.isEnrolled
+    ? `/courses/${course.id}/learn`
+    : courseHref;
   return (
     <Card className="group flex h-full flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
       <Link
@@ -59,7 +62,9 @@ export default function CourseCard({ course }: { course: Course }) {
             {price(course.price)}
           </span>
           <Button asChild size="sm">
-            <Link href={courseHref}>View course</Link>
+            <Link href={actionHref}>
+              {course.isEnrolled ? "Continue" : "Enroll"}
+            </Link>
           </Button>
         </div>
       </CardContent>

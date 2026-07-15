@@ -26,6 +26,7 @@ export type Course = {
   createdAt?: string;
   updatedAt?: string;
   image?: string;
+  isEnrolled?: boolean;
 };
 
 export type Lesson = {
