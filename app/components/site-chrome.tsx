@@ -11,9 +11,10 @@ export default function SiteChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isAdmin = pathname.startsWith("/admin");
+  const isWorkspace =
+    pathname.startsWith("/admin") || pathname.startsWith("/instructor");
 
-  if (isAdmin) return children;
+  if (isWorkspace) return children;
 
   return (
     <>

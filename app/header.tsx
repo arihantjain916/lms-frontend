@@ -22,7 +22,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-authenticated";
-import { getPrograms, getSearchSuggestions, type Program } from "@/lib/content-api";
+import {
+  getPrograms,
+  getSearchSuggestions,
+  type Program,
+} from "@/lib/content-api";
 import { getCatalogCategories, type CatalogCategory } from "@/lib/course-api";
 
 export default function Header() {
@@ -95,7 +99,13 @@ export default function Header() {
     };
   }, []);
 
-  const notifications: { id: string; title: string; message: string; time: string; read: boolean }[] = [];
+  const notifications: {
+    id: string;
+    title: string;
+    message: string;
+    time: string;
+    read: boolean;
+  }[] = [];
   const unreadNotifications = notifications.filter((item) => !item.read).length;
 
   return (
@@ -293,7 +303,10 @@ export default function Header() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold">Notifications</h3>
                       {unreadNotifications > 0 && (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-600">
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-50 text-blue-600"
+                        >
                           {unreadNotifications} new
                         </Badge>
                       )}
@@ -356,6 +369,14 @@ export default function Header() {
                   </Link>
                 </Button>
               )}
+              {user?.role?.toUpperCase() === "INSTRUCTOR" && (
+                <Button asChild variant="ghost">
+                  <Link href="/instructor">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Teach
+                  </Link>
+                </Button>
+              )}
               <Button asChild variant="ghost">
                 <Link href="/my-learning">
                   <BookOpen className="mr-2 h-4 w-4" />
@@ -393,7 +414,10 @@ export default function Header() {
               >
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild className="hidden bg-blue-600 hover:bg-blue-700 sm:inline-flex">
+              <Button
+                asChild
+                className="hidden bg-blue-600 hover:bg-blue-700 sm:inline-flex"
+              >
                 <Link href="/register">Sign Up</Link>
               </Button>
             </>
@@ -477,39 +501,57 @@ export default function Header() {
                 ["/about", "About Us"],
                 ["/contact", "Contact"],
               ].map(([href, label]) => (
-                <Link key={href} href={href} onClick={() => setIsMenuOpen(false)} className="block border-t p-3 text-sm font-medium hover:bg-blue-50">
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block border-t p-3 text-sm font-medium hover:bg-blue-50"
+                >
                   {label}
                 </Link>
               ))}
             </div>
 
             {/* Mobile Notifications */}
-            {isAuthenticated && <div className="border rounded-md overflow-hidden">
-              <div className="flex items-center justify-between p-3 bg-blue-50">
-                <div className="flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Notifications</span>
-                </div>
-                {unreadNotifications > 0 && (
-                  <Badge variant="outline" className="bg-blue-100 text-blue-600">
-                    {unreadNotifications} new
-                  </Badge>
-                )}
-              </div>
-              <div className="max-h-[200px] overflow-y-auto">
-                {notifications.length ? notifications.slice(0, 2).map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-3 border-t hover:bg-muted/50 transition-colors ${!notification.read ? "bg-blue-50/50" : ""}`}
-                  >
-                    <p className="font-medium text-sm">{notification.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {notification.message}
-                    </p>
+            {isAuthenticated && (
+              <div className="border rounded-md overflow-hidden">
+                <div className="flex items-center justify-between p-3 bg-blue-50">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium">Notifications</span>
                   </div>
-                )) : <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet</p>}
+                  {unreadNotifications > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-100 text-blue-600"
+                    >
+                      {unreadNotifications} new
+                    </Badge>
+                  )}
+                </div>
+                <div className="max-h-[200px] overflow-y-auto">
+                  {notifications.length ? (
+                    notifications.slice(0, 2).map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-3 border-t hover:bg-muted/50 transition-colors ${!notification.read ? "bg-blue-50/50" : ""}`}
+                      >
+                        <p className="font-medium text-sm">
+                          {notification.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {notification.message}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="p-4 text-center text-sm text-muted-foreground">
+                      No notifications yet
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>}
+            )}
 
             {isAuthenticated ? (
               <div className="grid grid-cols-2 gap-2 mt-2">
@@ -518,6 +560,14 @@ export default function Header() {
                     <Link href="/admin">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Admin workspace
+                    </Link>
+                  </Button>
+                )}
+                {user?.role?.toUpperCase() === "INSTRUCTOR" && (
+                  <Button asChild variant="outline" className="col-span-2">
+                    <Link href="/instructor">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Instructor workspace
                     </Link>
                   </Button>
                 )}
