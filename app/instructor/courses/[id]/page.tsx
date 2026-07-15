@@ -79,6 +79,8 @@ const emptyQuestion = {
   options: [
     { option: "", isCorrect: true },
     { option: "", isCorrect: false },
+    { option: "", isCorrect: false },
+    { option: "", isCorrect: false },
   ],
 };
 const backendDate = (value: string) => value.replace("T", " ").slice(0, 16);
@@ -793,7 +795,12 @@ export function CourseContentManager({
               </div>
               {questionForm.type === "MCQ" && (
                 <div className="space-y-2 sm:col-span-2">
-                  <Label>Options</Label>
+                  <div>
+                    <Label>Options</Label>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Enter exactly four options and select the correct answer.
+                    </p>
+                  </div>
                   {questionForm.options.map((option, index) => (
                     <div key={index} className="flex gap-2">
                       <input
