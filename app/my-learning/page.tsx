@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, BookOpen, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Bookmark, BookOpen, ClipboardCheck, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import CourseCard from "@/app/courses/course-card";
 import {
@@ -20,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MyLearningPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +96,11 @@ export default function MyLearningPage() {
           Continue enrolled courses or revisit your wishlist.
         </p>
       </div>
-      <Tabs defaultValue="enrolled">
+      <Tabs
+        defaultValue={
+          searchParams.get("tab") === "exams" ? "exams" : "enrolled"
+        }
+      >
         <TabsList>
           <TabsTrigger value="enrolled">
             Enrolled ({enrollments.length})
@@ -102,6 +108,7 @@ export default function MyLearningPage() {
           <TabsTrigger value="wishlist">
             Wishlist ({wishlist.length})
           </TabsTrigger>
+          <TabsTrigger value="exams">Exams</TabsTrigger>
         </TabsList>
         <TabsContent value="enrolled" className="mt-7">
           {enrollments.length ? (
@@ -130,6 +137,42 @@ export default function MyLearningPage() {
             <Empty
               icon={<BookOpen className="h-10 w-10" />}
               title="No enrolled courses"
+              action="Browse courses"
+              href="/courses"
+            />
+          )}
+        </TabsContent>
+        <TabsContent value="exams" className="mt-7">
+          {enrollments.length ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {enrollments.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 rounded-xl border bg-card p-5 shadow-sm"
+                >
+                  <div className="rounded-full bg-blue-50 p-3 text-blue-600">
+                    <ClipboardCheck className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate font-semibold">
+                      {item.course.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      View available course exams
+                    </p>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link href={`/courses/${item.course.id}/exams`}>
+                      View exams
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty
+              icon={<ClipboardCheck className="h-10 w-10" />}
+              title="Enroll in a course to access its exams"
               action="Browse courses"
               href="/courses"
             />

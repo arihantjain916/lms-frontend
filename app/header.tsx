@@ -15,6 +15,7 @@ import {
   LogOut,
   UserCircle,
   BookOpen,
+  ClipboardCheck,
   LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -383,6 +384,12 @@ export default function Header() {
                   My learning
                 </Link>
               </Button>
+              <Button asChild variant="ghost">
+                <Link href="/my-learning?tab=exams">
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  Exams
+                </Link>
+              </Button>
               <Button
                 asChild
                 variant="outline"
@@ -573,6 +580,9 @@ export default function Header() {
                 )}
                 <Button asChild variant="outline" className="flex-1">
                   <Link href="/my-learning">My learning</Link>
+                </Button>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/my-learning?tab=exams">Exams</Link>
                 </Button>
                 <Button asChild variant="outline" className="flex-1">
                   <Link href="/account">Account</Link>

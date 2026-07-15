@@ -10,6 +10,7 @@ import {
   BookOpen,
   CheckCircle2,
   ChevronLeft,
+  ClipboardCheck,
   Clock,
   GraduationCap,
   PlayCircle,
@@ -715,6 +716,14 @@ export default function CourseDetailPage() {
                       ? "Proceed to checkout"
                       : "Enroll for free"}
               </Button>
+              {enrolled && (
+                <Button asChild variant="outline" className="mt-3 w-full">
+                  <Link href={`/courses/${course.id}/exams`}>
+                    <ClipboardCheck className="mr-2 h-4 w-4" />
+                    View course exams
+                  </Link>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="mt-3 w-full"
