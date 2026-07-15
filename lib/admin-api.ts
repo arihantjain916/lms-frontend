@@ -413,7 +413,7 @@ export async function getAdminWebinars(
 ) {
   return toPage<AdminWebinar>(
     await instance.get("/webinars", {
-      params: { page, limit, ...filters },
+      params: { page, limit, ...filters, q: filters.q || "%" },
     }),
   );
 }
@@ -491,7 +491,9 @@ export async function getAdminUsers(
   filters: { q?: string; role?: AdminUser["role"] } = {},
 ) {
   return toPage<AdminUser>(
-    await instance.get("/admin/users", { params: { page, limit, ...filters } }),
+    await instance.get("/admin/users", {
+      params: { page, limit, ...filters, q: filters.q || "%" },
+    }),
   );
 }
 
@@ -603,7 +605,9 @@ export async function getAdminTutorials(
   filters: { q?: string; category?: string } = {},
 ) {
   return toPage<AdminTutorial>(
-    await instance.get("/tutorials", { params: { page, limit, ...filters } }),
+    await instance.get("/tutorials", {
+      params: { page, limit, ...filters, q: filters.q || "%" },
+    }),
   );
 }
 
