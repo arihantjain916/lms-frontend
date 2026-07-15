@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { GradingDialog } from "@/components/grading-dialog";
+import { CourseQueryManager } from "@/components/course-query-manager";
 import {
   Dialog,
   DialogContent,
@@ -103,7 +104,9 @@ export function CourseContentManager({
   const [course, setCourse] = useState<InstructorCourse | null>(null);
   const [lessons, setLessons] = useState<InstructorLesson[]>([]);
   const [exams, setExams] = useState<InstructorExam[]>([]);
-  const [section, setSection] = useState<"lessons" | "exams">("lessons");
+  const [section, setSection] = useState<"lessons" | "exams" | "queries">(
+    "lessons",
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lessonOpen, setLessonOpen] = useState(false);
@@ -387,17 +390,19 @@ export function CourseContentManager({
         title={course.title}
         description="Manage this course’s curriculum and assessments."
         action={
-          <Button
-            onClick={() =>
-              section === "lessons" ? editLesson() : setExamOpen(true)
-            }
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {section === "lessons" ? "New lesson" : "New exam"}
-          </Button>
+          section !== "queries" ? (
+            <Button
+              onClick={() =>
+                section === "lessons" ? editLesson() : setExamOpen(true)
+              }
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {section === "lessons" ? "New lesson" : "New exam"}
+            </Button>
+          ) : undefined
         }
       />
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <Button
           size="sm"
           variant={section === "lessons" ? "default" : "outline"}
@@ -411,6 +416,13 @@ export function CourseContentManager({
           onClick={() => setSection("exams")}
         >
           Exams ({exams.length})
+        </Button>
+        <Button
+          size="sm"
+          variant={section === "queries" ? "default" : "outline"}
+          onClick={() => setSection("queries")}
+        >
+          Student queries
         </Button>
       </div>
       <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
@@ -463,6 +475,8 @@ export function CourseContentManager({
               ))}
             </div>
           )
+        ) : section === "queries" ? (
+          <CourseQueryManager courseId={courseId} />
         ) : !exams.length ? (
           <EmptyState
             title="No exams"
