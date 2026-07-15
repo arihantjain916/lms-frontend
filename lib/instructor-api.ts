@@ -88,6 +88,10 @@ export async function getInstructorCourses() {
   return entity<AdminCourse[]>(await instance.get("/course/me"));
 }
 
+export async function getCourseForManagement(id: number) {
+  return entity<AdminCourse>(await instance.get(`/course/${id}`));
+}
+
 export async function saveInstructorCourse(input: {
   id?: number;
   title: string;

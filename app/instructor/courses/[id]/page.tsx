@@ -27,6 +27,7 @@ import {
   deleteInstructorExam,
   deleteInstructorLesson,
   deleteInstructorQuestion,
+  getCourseForManagement,
   getInstructorCourses,
   getInstructorExams,
   getInstructorLessons,
@@ -74,7 +75,11 @@ const emptyQuestion = {
 };
 const backendDate = (value: string) => value.replace("T", " ").slice(0, 16);
 
-export default function InstructorCourseContentPage() {
+export function CourseContentManager({
+  allowAnyCourse = false,
+}: {
+  allowAnyCourse?: boolean;
+}) {
   const params = useParams<{ id: string }>();
   const courseId = Number(params.id);
   const [course, setCourse] = useState<InstructorCourse | null>(null);
@@ -98,15 +103,21 @@ export default function InstructorCourseContentPage() {
     setLoading(true);
     setError("");
     try {
-      const [ownedCourses, lessonPage, examList] = await Promise.all([
-        getInstructorCourses(),
+      const [managedCourse, lessonPage, examList] = await Promise.all([
+        allowAnyCourse
+          ? getCourseForManagement(courseId)
+          : getInstructorCourses().then((courses) => {
+              const owned = courses.find((item) => item.id === courseId);
+              if (!owned)
+                throw new Error(
+                  "This course is not owned by your instructor account.",
+                );
+              return owned;
+            }),
         getInstructorLessons(courseId),
         getInstructorExams(courseId),
       ]);
-      const owned = ownedCourses.find((item) => item.id === courseId);
-      if (!owned)
-        throw new Error("This course is not owned by your instructor account.");
-      setCourse(owned);
+      setCourse(managedCourse);
       setLessons(lessonPage.data);
       setExams(examList);
     } catch (err: any) {
@@ -114,7 +125,7 @@ export default function InstructorCourseContentPage() {
     } finally {
       setLoading(false);
     }
-  }, [courseId]);
+  }, [allowAnyCourse, courseId]);
   useEffect(() => {
     load();
   }, [load]);
@@ -268,7 +279,9 @@ export default function InstructorCourseContentPage() {
     <>
       <div className="mb-4">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/instructor/courses">
+          <Link
+            href={allowAnyCourse ? "/admin/courses" : "/instructor/courses"}
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to courses
           </Link>
@@ -811,4 +824,8 @@ export default function InstructorCourseContentPage() {
       </Dialog>
     </>
   );
+}
+
+export default function InstructorCourseContentPage() {
+  return <CourseContentManager />;
 }

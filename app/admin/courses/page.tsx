@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Edit3, Plus, Search, Star, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Edit3, FileQuestion, Plus, Search, Star, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,6 +222,16 @@ export default function AdminCoursesPage() {
                       <td className="px-5 py-4">
                         <div className="flex justify-end gap-2">
                           <Button
+                            asChild
+                            variant="outline"
+                            size="icon"
+                            title="Manage lessons and exams"
+                          >
+                            <Link href={`/admin/courses/${item.id}`}>
+                              <FileQuestion className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button
                             variant="outline"
                             size="icon"
                             title="Edit course"
@@ -256,8 +267,8 @@ export default function AdminCoursesPage() {
                 {form.id ? "Edit course" : "Create course"}
               </DialogTitle>
               <DialogDescription>
-                Set the core catalog information. Lessons and exams can be
-                managed from their course tools later.
+                Set the core catalog information. Use the course tools action to
+                manage lessons, exams, and questions.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-5 sm:grid-cols-2">
