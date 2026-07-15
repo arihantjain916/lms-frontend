@@ -6,8 +6,11 @@ import {
   ArrowLeft,
   ClipboardCheck,
   FileQuestion,
+  Loader2,
+  Paperclip,
   Plus,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -31,21 +34,26 @@ import {
   PageHeading,
 } from "@/app/admin/_components/admin-ui";
 import {
+  addInstructorLessonResource,
   deleteInstructorExam,
   deleteInstructorLesson,
+  deleteInstructorLessonResource,
   deleteInstructorQuestion,
   getCourseForManagement,
   getInstructorCourses,
   getInstructorExams,
+  getInstructorLessonResources,
   getInstructorLessons,
   getInstructorQuestions,
   saveInstructorExam,
   saveInstructorLesson,
   saveInstructorQuestion,
   setInstructorExamStatus,
+  uploadLessonResourceFile,
   type InstructorCourse,
   type InstructorExam,
   type InstructorLesson,
+  type InstructorLessonResource,
   type InstructorQuestion,
 } from "@/lib/instructor-api";
 
@@ -100,6 +108,15 @@ export function CourseContentManager({
   const [error, setError] = useState("");
   const [lessonOpen, setLessonOpen] = useState(false);
   const [lessonForm, setLessonForm] = useState(emptyLesson);
+  const [resourceLesson, setResourceLesson] = useState<InstructorLesson | null>(
+    null,
+  );
+  const [resources, setResources] = useState<InstructorLessonResource[]>([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [resourceTitle, setResourceTitle] = useState("");
+  const [resourceFile, setResourceFile] = useState<File | null>(null);
+  const [resourceInputKey, setResourceInputKey] = useState(0);
+  const [uploadingResource, setUploadingResource] = useState(false);
   const [examOpen, setExamOpen] = useState(false);
   const [examForm, setExamForm] = useState(emptyExam);
   const [questionExam, setQuestionExam] = useState<InstructorExam | null>(null);
@@ -183,6 +200,71 @@ export function CourseContentManager({
       await load();
     } catch (err: any) {
       toast.error(err?.message || "Unable to delete lesson.");
+    }
+  }
+  async function manageResources(item: InstructorLesson) {
+    setResourceLesson(item);
+    setResourceTitle("");
+    setResourceFile(null);
+    setResourceInputKey((value) => value + 1);
+    setResourcesLoading(true);
+    try {
+      setResources(await getInstructorLessonResources(item.id));
+    } catch (err: any) {
+      toast.error(err?.message || "Unable to load lesson resources.");
+    } finally {
+      setResourcesLoading(false);
+    }
+  }
+  function selectResourceFile(file?: File) {
+    if (file && file.size > 100 * 1024 * 1024) {
+      toast.error("Resource files cannot exceed 100 MB.");
+      setResourceFile(null);
+      setResourceInputKey((value) => value + 1);
+      return;
+    }
+    setResourceFile(file || null);
+    if (file && !resourceTitle.trim()) {
+      setResourceTitle(file.name.replace(/\.[^.]+$/, ""));
+    }
+  }
+  async function uploadResource(event: FormEvent) {
+    event.preventDefault();
+    if (!resourceLesson || !resourceFile) {
+      toast.error("Choose a resource file to upload.");
+      return;
+    }
+    setUploadingResource(true);
+    try {
+      const url = await uploadLessonResourceFile(resourceFile);
+      const created = await addInstructorLessonResource(resourceLesson.id, {
+        title: resourceTitle.trim(),
+        url,
+        type: resourceFile.type || "Resource",
+      });
+      setResources((current) => [...current, created]);
+      setResourceTitle("");
+      setResourceFile(null);
+      setResourceInputKey((value) => value + 1);
+      toast.success("Lesson resource uploaded.");
+    } catch (err: any) {
+      toast.error(err?.message || "Unable to upload lesson resource.");
+    } finally {
+      setUploadingResource(false);
+    }
+  }
+  async function removeResource(item: InstructorLessonResource) {
+    if (!resourceLesson || !window.confirm(`Delete resource “${item.title}”?`))
+      return;
+    try {
+      toast.success(
+        await deleteInstructorLessonResource(resourceLesson.id, item.id),
+      );
+      setResources((current) =>
+        current.filter((resource) => resource.id !== item.id),
+      );
+    } catch (err: any) {
+      toast.error(err?.message || "Unable to delete lesson resource.");
     }
   }
   async function submitExam(event: FormEvent) {
@@ -341,7 +423,10 @@ export function CourseContentManager({
           ) : (
             <div className="divide-y">
               {lessons.map((item, index) => (
-                <div key={item.id} className="flex items-center gap-4 p-5">
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center"
+                >
                   <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-700">
                     {index + 1}
                   </div>
@@ -357,6 +442,14 @@ export function CourseContentManager({
                     onClick={() => editLesson(item)}
                   >
                     Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => manageResources(item)}
+                  >
+                    <Paperclip className="mr-2 h-4 w-4" />
+                    Resources
                   </Button>
                   <Button
                     variant="outline"
@@ -532,6 +625,106 @@ export function CourseContentManager({
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(resourceLesson)}
+        onOpenChange={(value) => !value && setResourceLesson(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{resourceLesson?.title} resources</DialogTitle>
+            <DialogDescription>
+              Upload PDFs, images, MP3 audio, or MP4 video for students.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4 rounded-xl border bg-slate-50 p-4"
+            onSubmit={uploadResource}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="resource-title">Resource title</Label>
+              <Input
+                id="resource-title"
+                required
+                maxLength={500}
+                value={resourceTitle}
+                onChange={(event) => setResourceTitle(event.target.value)}
+                placeholder="Lesson notes"
+                disabled={uploadingResource}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="resource-file">File</Label>
+              <Input
+                key={resourceInputKey}
+                id="resource-file"
+                required
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.mp3,.mpeg,.mp4,application/pdf,image/png,image/jpeg,audio/mpeg,video/mp4"
+                onChange={(event) =>
+                  selectResourceFile(event.target.files?.[0])
+                }
+                disabled={uploadingResource}
+              />
+              <p className="text-xs text-slate-500">
+                PDF, PNG, JPG, JPEG, MP3, MPEG, or MP4. Maximum 100 MB.
+              </p>
+            </div>
+            <Button disabled={uploadingResource || !resourceFile}>
+              {uploadingResource ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {uploadingResource ? "Uploading…" : "Upload resource"}
+            </Button>
+          </form>
+
+          <div className="max-h-[38vh] overflow-y-auto py-2">
+            {resourcesLoading ? (
+              <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading resources…
+              </div>
+            ) : !resources.length ? (
+              <p className="py-8 text-center text-sm text-slate-500">
+                No resources attached to this lesson.
+              </p>
+            ) : (
+              <div className="divide-y rounded-xl border">
+                {resources.map((resource) => (
+                  <div
+                    key={resource.id}
+                    className="flex items-center gap-3 p-4"
+                  >
+                    <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-blue-700">
+                      <Paperclip className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {resource.title}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">
+                        {resource.type || "Resource"}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600"
+                      aria-label={`Delete ${resource.title}`}
+                      onClick={() => removeResource(resource)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

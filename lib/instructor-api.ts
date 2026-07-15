@@ -29,6 +29,13 @@ export type InstructorLesson = {
   updatedAt?: string;
 };
 
+export type InstructorLessonResource = {
+  id: string;
+  title: string;
+  type?: string;
+  createdAt?: string;
+};
+
 export type InstructorExam = {
   id: string;
   title: string;
@@ -209,6 +216,40 @@ export async function saveInstructorLesson(input: InstructorLessonInput) {
 
 export async function deleteInstructorLesson(id: string) {
   return message(await instance.delete(`/lesson/delete/${id}`));
+}
+
+export async function getInstructorLessonResources(lessonId: string) {
+  return entity<InstructorLessonResource[]>(
+    await instance.get(`/lessons/${lessonId}/resources`),
+  );
+}
+
+export async function uploadLessonResourceFile(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return entity<string>(
+    await instance.post("/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  );
+}
+
+export async function addInstructorLessonResource(
+  lessonId: string,
+  input: { title: string; url: string; type?: string },
+) {
+  return entity<InstructorLessonResource>(
+    await instance.post(`/lessons/${lessonId}/resources`, input),
+  );
+}
+
+export async function deleteInstructorLessonResource(
+  lessonId: string,
+  resourceId: string,
+) {
+  return message(
+    await instance.delete(`/lessons/${lessonId}/resources/${resourceId}`),
+  );
 }
 
 export type InstructorExamInput = Omit<InstructorExam, "id" | "status"> & {
