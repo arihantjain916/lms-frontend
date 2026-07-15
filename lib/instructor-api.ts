@@ -52,6 +52,40 @@ export type InstructorQuestion = {
   options?: { id?: string; option: string; isCorrect?: boolean }[];
 };
 
+export type GradingStatus = "PENDING" | "IN_PROGRESS" | "FINALIZED";
+
+export type SubmissionSummary = {
+  attemptId: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  submittedAt: string;
+  gradingStatus: GradingStatus;
+};
+
+export type SubmittedAnswer = {
+  questionAttemptId: string;
+  questionId: string;
+  questionType: string;
+  title: string;
+  answer: string;
+  maximumMarks: number;
+  awardedMarks: number | null;
+  feedback: string | null;
+};
+
+export type SubmissionDetail = {
+  attemptId: string;
+  examId: string;
+  examTitle: string;
+  studentId: string;
+  studentName: string;
+  submittedAt: string;
+  gradingStatus: GradingStatus;
+  feedback: string | null;
+  answers: SubmittedAnswer[];
+};
+
 export type Page<T> = {
   data: T[];
   currentPage: number;
@@ -235,4 +269,40 @@ export async function saveInstructorQuestion(input: InstructorQuestionInput) {
 
 export async function deleteInstructorQuestion(id: string) {
   return message(await instance.delete(`/question/delete/${id}`));
+}
+
+export async function getExamSubmissions(examId: string) {
+  return entity<SubmissionSummary[]>(
+    await instance.get(`/grading/exams/${examId}/submissions`),
+  );
+}
+
+export async function getSubmissionDetail(attemptId: string) {
+  return entity<SubmissionDetail>(
+    await instance.get(`/grading/submissions/${attemptId}`),
+  );
+}
+
+export async function gradeSubmissionAnswer(
+  attemptId: string,
+  questionAttemptId: string,
+  input: { awardedMarks: number; feedback?: string },
+) {
+  return entity<SubmittedAnswer>(
+    await instance.put(
+      `/grading/submissions/${attemptId}/answers/${questionAttemptId}`,
+      input,
+    ),
+  );
+}
+
+export async function finalizeSubmissionGrading(
+  attemptId: string,
+  feedback?: string,
+) {
+  return entity<SubmissionDetail>(
+    await instance.post(`/grading/submissions/${attemptId}/finalize`, {
+      feedback: feedback || null,
+    }),
+  );
 }

@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { ArrowLeft, FileQuestion, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardCheck,
+  FileQuestion,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { GradingDialog } from "@/components/grading-dialog";
 import {
   Dialog,
   DialogContent,
@@ -68,6 +75,7 @@ const emptyQuestion = {
   marks: "1",
   title: "",
   description: "",
+  correctOption: true,
   options: [
     { option: "", isCorrect: true },
     { option: "", isCorrect: false },
@@ -97,6 +105,7 @@ export function CourseContentManager({
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionOpen, setQuestionOpen] = useState(false);
   const [questionForm, setQuestionForm] = useState(emptyQuestion);
+  const [gradingExam, setGradingExam] = useState<InstructorExam | null>(null);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -250,7 +259,10 @@ export function CourseContentManager({
           description: questionForm.description,
           options:
             questionForm.type === "MCQ" ? questionForm.options : undefined,
-          correctOption: questionForm.type === "TRUE_FALSE" ? true : undefined,
+          correctOption:
+            questionForm.type === "TRUE_FALSE"
+              ? questionForm.correctOption
+              : undefined,
         }),
       );
       setQuestionOpen(false);
@@ -396,6 +408,14 @@ export function CourseContentManager({
                 >
                   <FileQuestion className="mr-2 h-4 w-4" />
                   Questions
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGradingExam(item)}
+                >
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  Grade
                 </Button>
                 <Button
                   variant="outline"
@@ -695,6 +715,12 @@ export function CourseContentManager({
         </DialogContent>
       </Dialog>
 
+      <GradingDialog
+        exam={gradingExam}
+        open={Boolean(gradingExam)}
+        onOpenChange={(value) => !value && setGradingExam(null)}
+      />
+
       <Dialog open={questionOpen} onOpenChange={setQuestionOpen}>
         <DialogContent className="max-w-2xl">
           <form onSubmit={submitQuestion}>
@@ -804,6 +830,32 @@ export function CourseContentManager({
                       />
                     </div>
                   ))}
+                </div>
+              )}
+              {questionForm.type === "TRUE_FALSE" && (
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Correct answer</Label>
+                  <div className="flex gap-3">
+                    {[true, false].map((value) => (
+                      <label
+                        key={String(value)}
+                        className="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm capitalize"
+                      >
+                        <input
+                          type="radio"
+                          name="correct-true-false-answer"
+                          checked={questionForm.correctOption === value}
+                          onChange={() =>
+                            setQuestionForm({
+                              ...questionForm,
+                              correctOption: value,
+                            })
+                          }
+                        />
+                        {String(value)}
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
