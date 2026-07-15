@@ -7,14 +7,17 @@ import {
   BookOpen,
   FileText,
   FolderTree,
-  Sparkles,
+  CalendarDays,
+  BriefcaseBusiness,
+  Users,
+  ShoppingCart,
   Star,
 } from "lucide-react";
 import { PageHeading, LoadingState, ErrorState } from "./_components/admin-ui";
 import {
   getAdminBlogs,
-  getAdminCategories,
   getAdminCourses,
+  getAdminDashboard,
   type AdminBlog,
   type AdminCourse,
 } from "@/lib/admin-api";
@@ -24,8 +27,11 @@ type DashboardData = {
   blogs: AdminBlog[];
   totalCourses: number;
   totalBlogs: number;
-  categories: number;
-  featured: number;
+  programs: number;
+  webinars: number;
+  users: number;
+  enrollments: number;
+  revenue: number;
 };
 
 export default function AdminDashboard() {
@@ -35,18 +41,21 @@ export default function AdminDashboard() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const [courses, categories, blogs] = await Promise.all([
+      const [courses, blogs, stats] = await Promise.all([
         getAdminCourses(1, 6),
-        getAdminCategories(),
         getAdminBlogs(1, 5),
+        getAdminDashboard(),
       ]);
       setData({
         courses: courses.data,
         blogs: blogs.data,
         totalCourses: courses.totalElements,
         totalBlogs: blogs.totalElements,
-        categories: categories.length,
-        featured: courses.data.filter((course) => course.isFeatured).length,
+        programs: stats.content.programs,
+        webinars: stats.content.webinars,
+        users: stats.users.total,
+        enrollments: stats.engagement.enrollments,
+        revenue: stats.orders.revenue || 0,
       });
     } catch (err: any) {
       setError(err?.message || "The server did not return dashboard data.");
@@ -87,9 +96,9 @@ export default function AdminDashboard() {
       color: "bg-blue-50 text-blue-600",
     },
     {
-      label: "Categories",
-      value: data.categories,
-      icon: FolderTree,
+      label: "Users",
+      value: data.users,
+      icon: Users,
       color: "bg-violet-50 text-violet-600",
     },
     {
@@ -99,10 +108,28 @@ export default function AdminDashboard() {
       color: "bg-emerald-50 text-emerald-600",
     },
     {
-      label: "Featured in view",
-      value: data.featured,
-      icon: Sparkles,
+      label: "Active programs",
+      value: data.programs,
+      icon: BriefcaseBusiness,
       color: "bg-amber-50 text-amber-600",
+    },
+    {
+      label: "Upcoming webinars",
+      value: data.webinars,
+      icon: CalendarDays,
+      color: "bg-rose-50 text-rose-600",
+    },
+    {
+      label: "Enrollments",
+      value: data.enrollments,
+      icon: FolderTree,
+      color: "bg-cyan-50 text-cyan-600",
+    },
+    {
+      label: "Revenue",
+      value: data.revenue.toLocaleString(),
+      icon: ShoppingCart,
+      color: "bg-lime-50 text-lime-700",
     },
   ];
 
@@ -112,7 +139,7 @@ export default function AdminDashboard() {
         title="Overview"
         description="A quick look at your learning platform."
       />
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div
             key={label}

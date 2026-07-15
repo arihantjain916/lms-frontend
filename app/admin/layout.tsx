@@ -5,14 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   BookOpen,
+  CalendarDays,
   ChevronLeft,
   FileText,
   FolderTree,
+  BriefcaseBusiness,
   GraduationCap,
   LayoutDashboard,
   LogOut,
   Menu,
   ShieldAlert,
+  ShieldCheck,
+  Inbox,
+  ShoppingCart,
+  Users,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +30,13 @@ const navigation = [
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/blogs", label: "Blog posts", icon: FileText },
+  { href: "/admin/tutorials", label: "Tutorials", icon: GraduationCap },
+  { href: "/admin/programs", label: "Programs", icon: BriefcaseBusiness },
+  { href: "/admin/webinars", label: "Webinars", icon: CalendarDays },
+  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/contact", label: "Contact inbox", icon: Inbox },
+  { href: "/admin/commerce", label: "Commerce", icon: ShoppingCart },
+  { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck },
 ];
 
 export default function AdminLayout({
