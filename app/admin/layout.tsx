@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Inbox,
+  MessagesSquare,
   ShoppingCart,
   Users,
   X,
@@ -35,6 +36,11 @@ const navigation = [
   { href: "/admin/webinars", label: "Webinars", icon: CalendarDays },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/contact", label: "Contact inbox", icon: Inbox },
+  {
+    href: "/admin/conversations",
+    label: "Customer care",
+    icon: MessagesSquare,
+  },
   { href: "/admin/commerce", label: "Commerce", icon: ShoppingCart },
   { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck },
 ];

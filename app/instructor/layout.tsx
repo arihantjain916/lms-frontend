@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageCircle,
   ShieldAlert,
   X,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { href: "/instructor", label: "Overview", icon: LayoutDashboard },
   { href: "/instructor/courses", label: "My courses", icon: BookOpen },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/instructor/blogs", label: "My blog posts", icon: FileText },
   { href: "/instructor/tutorials", label: "My tutorials", icon: GraduationCap },
 ];

@@ -12,6 +12,7 @@ import {
   Users,
   ShoppingCart,
   Star,
+  MessagesSquare,
 } from "lucide-react";
 import { PageHeading, LoadingState, ErrorState } from "./_components/admin-ui";
 import {
@@ -32,6 +33,8 @@ type DashboardData = {
   users: number;
   enrollments: number;
   revenue: number;
+  openTickets: number;
+  awaitingReply: number;
 };
 
 export default function AdminDashboard() {
@@ -56,6 +59,8 @@ export default function AdminDashboard() {
         users: stats.users.total,
         enrollments: stats.engagement.enrollments,
         revenue: stats.orders.revenue || 0,
+        openTickets: stats.support?.openTickets || 0,
+        awaitingReply: stats.support?.awaitingReply || 0,
       });
     } catch (err: any) {
       setError(err?.message || "The server did not return dashboard data.");
@@ -130,6 +135,18 @@ export default function AdminDashboard() {
       value: data.revenue.toLocaleString(),
       icon: ShoppingCart,
       color: "bg-lime-50 text-lime-700",
+    },
+    {
+      label: "Open support tickets",
+      value: data.openTickets,
+      icon: MessagesSquare,
+      color: "bg-orange-50 text-orange-700",
+    },
+    {
+      label: "Awaiting reply",
+      value: data.awaitingReply,
+      icon: MessagesSquare,
+      color: "bg-red-50 text-red-700",
     },
   ];
 

@@ -20,6 +20,7 @@ import {
   BookOpen,
   ClipboardCheck,
   LayoutDashboard,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -448,6 +449,12 @@ export default function Header() {
                 </Link>
               </Button>
               <Button asChild variant="ghost">
+                <Link href="/messages">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Messages
+                </Link>
+              </Button>
+              <Button asChild variant="ghost">
                 <Link href="/my-learning?tab=exams">
                   <ClipboardCheck className="mr-2 h-4 w-4" />
                   Exams
@@ -645,6 +652,9 @@ export default function Header() {
                 )}
                 <Button asChild variant="outline" className="flex-1">
                   <Link href="/my-learning">My learning</Link>
+                </Button>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/messages">Messages</Link>
                 </Button>
                 <Button asChild variant="outline" className="flex-1">
                   <Link href="/my-learning?tab=exams">Exams</Link>

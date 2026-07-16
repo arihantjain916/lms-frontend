@@ -201,10 +201,40 @@ export type AdminBlogComment = {
 };
 
 export type AdminDashboard = {
-  users: { total: number; students: number; instructors: number; admins: number };
-  orders: { total: number; paid: number; pending: number; failed: number; revenue: number };
-  content: { courses: number; programs: number; webinars: number; tutorials: number; blogs: number };
-  engagement: { enrollments: number; certificates: number; ratings: number; blogComments: number; contactSubmissions: number };
+  users: {
+    total: number;
+    students: number;
+    instructors: number;
+    admins: number;
+  };
+  orders: {
+    total: number;
+    paid: number;
+    pending: number;
+    failed: number;
+    revenue: number;
+  };
+  content: {
+    courses: number;
+    programs: number;
+    webinars: number;
+    tutorials: number;
+    blogs: number;
+  };
+  engagement: {
+    enrollments: number;
+    certificates: number;
+    ratings: number;
+    blogComments: number;
+    contactSubmissions: number;
+  };
+  support: {
+    openTickets: number;
+    closedTickets: number;
+    awaitingReply: number;
+    conversations: number;
+    messages: number;
+  };
 };
 
 export type AdminTutorial = {
@@ -288,7 +318,7 @@ export async function saveAdminCourse(input: {
     throw new Error("Course title must be 255 characters or fewer.");
   if (input.slug.length > 255)
     throw new Error("Course slug must be 255 characters or fewer.");
-  
+
   const response: any = input.id
     ? await instance.put("/course/update", input)
     : await instance.post("/course/add", input);
@@ -522,7 +552,9 @@ export async function getAdminContacts(
   department?: AdminContact["department"],
 ) {
   return toPage<AdminContact>(
-    await instance.get("/admin/contact", { params: { page, limit, department } }),
+    await instance.get("/admin/contact", {
+      params: { page, limit, department },
+    }),
   );
 }
 
@@ -544,9 +576,15 @@ export async function getAdminOrders(
   );
 }
 
-export async function getAdminEnrollments(page = 1, limit = 10, courseId?: number) {
+export async function getAdminEnrollments(
+  page = 1,
+  limit = 10,
+  courseId?: number,
+) {
   return toPage<AdminEnrollment>(
-    await instance.get("/admin/enrollments", { params: { page, limit, courseId } }),
+    await instance.get("/admin/enrollments", {
+      params: { page, limit, courseId },
+    }),
   );
 }
 

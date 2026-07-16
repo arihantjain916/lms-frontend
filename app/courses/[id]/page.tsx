@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   Clock,
   GraduationCap,
+  MessageCircle,
   PlayCircle,
   Share2,
   Star,
@@ -520,6 +521,16 @@ export default function CourseDetailPage() {
                       Instructor for {instructor.totalCourses} course
                       {instructor.totalCourses === 1 ? "" : "s"} on EduPortal.
                     </p>
+                    {enrolled && (
+                      <Button asChild variant="outline" className="mt-4">
+                        <Link
+                          href={`/messages/new?recipientId=${encodeURIComponent(instructor.id)}&recipientName=${encodeURIComponent(instructor.name)}&courseId=${course.id}&courseTitle=${encodeURIComponent(course.title)}`}
+                        >
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          Message instructor
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -721,6 +732,16 @@ export default function CourseDetailPage() {
                   <Link href={`/courses/${course.id}/exams`}>
                     <ClipboardCheck className="mr-2 h-4 w-4" />
                     View course exams
+                  </Link>
+                </Button>
+              )}
+              {enrolled && instructor && (
+                <Button asChild variant="outline" className="mt-3 w-full">
+                  <Link
+                    href={`/messages/new?recipientId=${encodeURIComponent(instructor.id)}&recipientName=${encodeURIComponent(instructor.name)}&courseId=${course.id}&courseTitle=${encodeURIComponent(course.title)}`}
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Message instructor
                   </Link>
                 </Button>
               )}

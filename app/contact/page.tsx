@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -36,9 +37,25 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import instance from "@/helper/axios";
 import toast from "react-hot-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/use-authenticated";
+import { loginHref } from "@/lib/auth-navigation";
+import { startSupportConversation } from "@/lib/conversation-api";
 
 export default function ContactPage() {
+  const router = useRouter();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [liveChatOpen, setLiveChatOpen] = useState(false);
+  const [liveChatMessage, setLiveChatMessage] = useState("");
+  const [liveChatSubmitting, setLiveChatSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -128,6 +145,35 @@ export default function ContactPage() {
       toast.error(error?.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const startLiveChat = () => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      router.push(loginHref("/messages/new"));
+      return;
+    }
+    setLiveChatOpen(true);
+  };
+
+  const submitLiveChat = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!liveChatMessage.trim()) return;
+    setLiveChatSubmitting(true);
+    try {
+      const conversation = await startSupportConversation({
+        subject: "Live chat support",
+        content: liveChatMessage.trim(),
+      });
+      setLiveChatOpen(false);
+      setLiveChatMessage("");
+      toast.success("Live chat started");
+      router.push(`/messages/${conversation.id}`);
+    } catch (error: any) {
+      toast.error(error?.message || "Unable to start live chat");
+    } finally {
+      setLiveChatSubmitting(false);
     }
   };
 
@@ -537,8 +583,12 @@ export default function ContactPage() {
                       Need immediate assistance? Our live chat support is
                       available Monday to Friday, 9am to 5pm IST.
                     </p>
-                    <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
-                      Start Live Chat
+                    <Button
+                      className="gap-2 bg-blue-600 hover:bg-blue-700"
+                      onClick={startLiveChat}
+                      disabled={authLoading}
+                    >
+                      {authLoading ? "Checking access…" : "Start Live Chat"}
                       <MessageSquare className="h-4 w-4" />
                     </Button>
                   </div>
@@ -568,6 +618,56 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      <Dialog open={liveChatOpen} onOpenChange={setLiveChatOpen}>
+        <DialogContent>
+          <form onSubmit={submitLiveChat}>
+            <DialogHeader>
+              <DialogTitle>Start live chat</DialogTitle>
+              <DialogDescription>
+                Send your first message to customer care. Replies will appear
+                instantly in the live conversation.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-5">
+              <label htmlFor="live-chat-message" className="text-sm font-medium">
+                How can we help?
+              </label>
+              <Textarea
+                id="live-chat-message"
+                value={liveChatMessage}
+                onChange={(event) => setLiveChatMessage(event.target.value)}
+                required
+                maxLength={5000}
+                rows={6}
+                className="mt-2"
+                placeholder="Describe what you need help with"
+                autoFocus
+              />
+              <p className="mt-1 text-right text-xs text-muted-foreground">
+                {liveChatMessage.length}/5000
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLiveChatOpen(false)}
+                disabled={liveChatSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={liveChatSubmitting || !liveChatMessage.trim()}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                {liveChatSubmitting ? "Starting…" : "Start chat"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Map Section */}
       <section className="py-16">

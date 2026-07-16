@@ -20,6 +20,7 @@ import {
   markNotificationRead,
   type Notification,
 } from "@/lib/notification-api";
+import type { ConversationMessage } from "@/lib/conversation-api";
 
 type ConnectionState = "disconnected" | "connecting" | "connected";
 
@@ -32,6 +33,7 @@ type NotificationContextValue = {
   refresh: () => Promise<void>;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
+  latestMessage: ConversationMessage | null;
 };
 
 const NotificationContext = createContext<NotificationContextValue | null>(
@@ -46,6 +48,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("disconnected");
+  const [latestMessage, setLatestMessage] =
+    useState<ConversationMessage | null>(null);
   const knownIds = useRef(new Set<string>());
 
   const refresh = useCallback(async () => {
@@ -80,6 +84,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setNotifications([]);
       setUnreadCount(0);
       setError(null);
+      setLatestMessage(null);
       return;
     }
     void refresh();
@@ -132,6 +137,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           if (!notification.isRead) setUnreadCount((current) => current + 1);
         } catch {
           setError("Received an invalid notification from the server");
+        }
+      });
+      client.subscribe("/user/queue/messages", (message: IMessage) => {
+        try {
+          const incoming = JSON.parse(message.body) as ConversationMessage;
+          if (incoming?.id && incoming?.conversationId)
+            setLatestMessage(incoming);
+        } catch {
+          setError("Received an invalid message from the server");
         }
       });
     };
@@ -187,6 +201,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       refresh,
       markRead,
       markAllRead,
+      latestMessage,
     }),
     [
       notifications,
@@ -197,6 +212,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       refresh,
       markRead,
       markAllRead,
+      latestMessage,
     ],
   );
 
