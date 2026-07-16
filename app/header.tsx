@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
+import toast from "react-hot-toast";
 import {
   GraduationCap,
   ChevronRight,
@@ -29,9 +32,28 @@ import {
   type Program,
 } from "@/lib/content-api";
 import { getCatalogCategories, type CatalogCategory } from "@/lib/course-api";
+import { useNotifications } from "@/hooks/use-notifications";
+import type { Notification } from "@/lib/notification-api";
+
+function notificationTime(createdAt: string) {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return "Just now";
+  return formatDistanceToNow(date, { addSuffix: true });
+}
 
 export default function Header() {
+  const router = useRouter();
   const { isAuthenticated, user, logout } = useAuth();
+  const {
+    notifications,
+    unreadCount: unreadNotifications,
+    loading: notificationsLoading,
+    error: notificationsError,
+    connectionState,
+    refresh: refreshNotifications,
+    markRead,
+    markAllRead,
+  } = useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,14 +122,34 @@ export default function Header() {
     };
   }, []);
 
-  const notifications: {
-    id: string;
-    title: string;
-    message: string;
-    time: string;
-    read: boolean;
-  }[] = [];
-  const unreadNotifications = notifications.filter((item) => !item.read).length;
+  const openNotification = async (notification: Notification) => {
+    try {
+      await markRead(notification.id);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to mark notification as read",
+      );
+      return;
+    }
+
+    setIsNotificationsOpen(false);
+    setIsMenuOpen(false);
+    if (notification.link) router.push(notification.link);
+  };
+
+  const readAllNotifications = async () => {
+    try {
+      await markAllRead();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to mark notifications as read",
+      );
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -278,6 +320,9 @@ export default function Header() {
                 size="icon"
                 className="relative hidden lg:flex"
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                aria-label={`Notifications${unreadNotifications ? `, ${unreadNotifications} unread` : ""}`}
+                aria-expanded={isNotificationsOpen}
+                title={`Notifications (${connectionState})`}
               >
                 <Bell className="h-5 w-5" />
                 {unreadNotifications > 0 && (
@@ -304,27 +349,45 @@ export default function Header() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold">Notifications</h3>
                       {unreadNotifications > 0 && (
-                        <Badge
-                          variant="outline"
-                          className="bg-blue-50 text-blue-600"
+                        <button
+                          type="button"
+                          onClick={readAllNotifications}
+                          className="text-xs font-medium text-blue-600 hover:text-blue-700"
                         >
-                          {unreadNotifications} new
-                        </Badge>
+                          Mark all read
+                        </button>
                       )}
                     </div>
                   </div>
                   <div className="max-h-[320px] overflow-y-auto">
-                    {notifications.length > 0 ? (
+                    {notificationsLoading && notifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        Loading notifications…
+                      </div>
+                    ) : notificationsError && notifications.length === 0 ? (
+                      <div className="space-y-2 p-4 text-center text-sm text-muted-foreground">
+                        <p>{notificationsError}</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void refreshNotifications()}
+                        >
+                          Try again
+                        </Button>
+                      </div>
+                    ) : notifications.length > 0 ? (
                       notifications.map((notification) => (
-                        <div
+                        <button
+                          type="button"
                           key={notification.id}
-                          className={`p-4 border-b hover:bg-muted/50 transition-colors cursor-pointer ${!notification.read ? "bg-blue-50/50" : ""}`}
+                          onClick={() => void openNotification(notification)}
+                          className={`w-full border-b p-4 text-left transition-colors hover:bg-muted/50 ${!notification.isRead ? "bg-blue-50/50" : ""}`}
                         >
                           <div className="flex gap-3">
                             <div
-                              className={`mt-1 rounded-full p-1 ${!notification.read ? "bg-blue-100 text-blue-600" : "bg-muted text-muted-foreground"}`}
+                              className={`mt-1 rounded-full p-1 ${!notification.isRead ? "bg-blue-100 text-blue-600" : "bg-muted text-muted-foreground"}`}
                             >
-                              {!notification.read ? (
+                              {!notification.isRead ? (
                                 <Bell className="h-4 w-4" />
                               ) : (
                                 <CheckCircle2 className="h-4 w-4" />
@@ -335,20 +398,20 @@ export default function Header() {
                                 <p className="font-medium text-sm">
                                   {notification.title}
                                 </p>
-                                {!notification.read && (
+                                {!notification.isRead && (
                                   <span className="h-2 w-2 rounded-full bg-blue-600"></span>
                                 )}
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {notification.message}
+                                {notification.body}
                               </p>
                               <div className="flex items-center text-xs text-muted-foreground mt-2">
                                 <Clock className="h-3 w-3 mr-1" />
-                                {notification.time}
+                                {notificationTime(notification.createdAt)}
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </button>
                       ))
                     ) : (
                       <div className="p-4 text-center text-muted-foreground">
@@ -539,17 +602,19 @@ export default function Header() {
                 <div className="max-h-[200px] overflow-y-auto">
                   {notifications.length ? (
                     notifications.slice(0, 2).map((notification) => (
-                      <div
+                      <button
+                        type="button"
                         key={notification.id}
-                        className={`p-3 border-t hover:bg-muted/50 transition-colors ${!notification.read ? "bg-blue-50/50" : ""}`}
+                        onClick={() => void openNotification(notification)}
+                        className={`w-full border-t p-3 text-left transition-colors hover:bg-muted/50 ${!notification.isRead ? "bg-blue-50/50" : ""}`}
                       >
                         <p className="font-medium text-sm">
                           {notification.title}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {notification.message}
+                          {notification.body}
                         </p>
-                      </div>
+                      </button>
                     ))
                   ) : (
                     <p className="p-4 text-center text-sm text-muted-foreground">

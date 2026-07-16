@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/hooks/use-authenticated";
+import { NotificationProvider } from "@/hooks/use-notifications";
 import SiteChrome from "./components/site-chrome";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -30,8 +31,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Toaster />
-            <SiteChrome>{children}</SiteChrome>
+            <NotificationProvider>
+              <Toaster />
+              <SiteChrome>{children}</SiteChrome>
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
