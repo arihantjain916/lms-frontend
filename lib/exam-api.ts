@@ -24,6 +24,36 @@ export type Report = {
   percentage: number;
   grade: string;
 };
+export type ResultAnswer = {
+  questionAttemptId: string;
+  questionId: string;
+  questionType: string;
+  title: string;
+  description?: string | null;
+  answer?: string | null;
+  correctAnswer?: string | null;
+  maximumMarks: number;
+  awardedMarks?: number | null;
+  feedback?: string | null;
+  options?: ResultOption[];
+};
+export type ResultOption = {
+  option: string;
+  selected: boolean;
+  correct: boolean;
+};
+export type DetailedResult = Omit<Report, "id"> & {
+  reportId: string;
+  attemptId?: string | null;
+  examId: string;
+  examTitle: string;
+  courseId?: number | null;
+  courseTitle?: string | null;
+  submittedAt?: string | null;
+  gradingStatus: "PENDING" | "IN_PROGRESS" | "FINALIZED";
+  feedback?: string | null;
+  answers: ResultAnswer[];
+};
 function entity<T>(response: any): T {
   if (!response?.status || response?.data == null)
     throw new Error(response?.message || "Request failed");
@@ -59,4 +89,34 @@ export async function getMyReports() {
 }
 export async function getExamReport(examId: string) {
   return entity<Report>(await instance.get(`/report/${examId}/get`));
+}
+export async function getMyDetailedResults() {
+  return entity<DetailedResult[]>(await instance.get("/report/me/details"));
+}
+export async function getMyDetailedResult(reportId: string) {
+  const result = entity<DetailedResult>(
+    await instance.get(`/report/me/${reportId}/details`),
+  );
+  const questions = await getExamQuestions(result.examId);
+  const questionsById = new Map(
+    questions.map((question) => [question.id, question]),
+  );
+
+  return {
+    ...result,
+    answers: result.answers.map((answer) => {
+      const question = questionsById.get(answer.questionId);
+      if (answer.questionType !== "MCQ" || !question?.options?.length) {
+        return { ...answer, options: [] };
+      }
+      return {
+        ...answer,
+        options: question.options.map((option) => ({
+          option: option.option,
+          selected: option.option === answer.answer,
+          correct: option.option === answer.correctAnswer,
+        })),
+      };
+    }),
+  } satisfies DetailedResult;
 }

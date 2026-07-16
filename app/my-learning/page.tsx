@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Bookmark, BookOpen, ClipboardCheck, Loader2 } from "lucide-react";
+import {
+  BarChart3,
+  Bookmark,
+  BookOpen,
+  ClipboardCheck,
+  Loader2,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import CourseCard from "@/app/courses/course-card";
 import {
@@ -18,27 +24,32 @@ import { useAuth } from "@/hooks/use-authenticated";
 import { loginHref } from "@/lib/auth-navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getMyDetailedResults, type DetailedResult } from "@/lib/exam-api";
 
 export default function MyLearningPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [reports, setReports] = useState<DetailedResult[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
-    const [enrolledResult, wishlistResult] = await Promise.allSettled([
-      getMyEnrollments(1, 100),
-      getWishlist(1, 100),
-    ]);
+    const [enrolledResult, wishlistResult, reportResult] =
+      await Promise.allSettled([
+        getMyEnrollments(1, 100),
+        getWishlist(1, 100),
+        getMyDetailedResults(),
+      ]);
     setEnrollments(
       enrolledResult.status === "fulfilled" ? enrolledResult.value.data : [],
     );
     setWishlist(
       wishlistResult.status === "fulfilled" ? wishlistResult.value.data : [],
     );
+    setReports(reportResult.status === "fulfilled" ? reportResult.value : []);
     setLoading(false);
   }, [isAuthenticated]);
 
@@ -98,7 +109,11 @@ export default function MyLearningPage() {
       </div>
       <Tabs
         defaultValue={
-          searchParams.get("tab") === "exams" ? "exams" : "enrolled"
+          ["enrolled", "wishlist", "exams", "results"].includes(
+            searchParams.get("tab") || "",
+          )
+            ? searchParams.get("tab")!
+            : "enrolled"
         }
       >
         <TabsList>
@@ -109,6 +124,7 @@ export default function MyLearningPage() {
             Wishlist ({wishlist.length})
           </TabsTrigger>
           <TabsTrigger value="exams">Exams</TabsTrigger>
+          <TabsTrigger value="results">Results ({reports.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="enrolled" className="mt-7">
           {enrollments.length ? (
@@ -200,6 +216,53 @@ export default function MyLearningPage() {
               title="Your wishlist is empty"
               action="Discover courses"
               href="/courses"
+            />
+          )}
+        </TabsContent>
+        <TabsContent value="results" className="mt-7">
+          {reports.length ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {reports.map((report, index) => (
+                <div
+                  key={report.reportId}
+                  className="rounded-xl border bg-card p-5 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="rounded-full bg-violet-50 p-3 text-violet-600">
+                      <BarChart3 className="h-5 w-5" />
+                    </div>
+                    <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                      {report.grade}
+                    </span>
+                  </div>
+                  <h2 className="mt-4 font-semibold">
+                    {report.examTitle || `Exam result ${index + 1}`}
+                  </h2>
+                  <p className="mt-2 text-2xl font-bold">
+                    {report.obtainedMarks} / {report.totalMarks}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {report.percentage}%
+                  </p>
+                  {report.courseTitle && (
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
+                      {report.courseTitle}
+                    </p>
+                  )}
+                  <Button asChild variant="outline" className="mt-4 w-full">
+                    <Link href={`/results/${report.reportId}`}>
+                      View details
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty
+              icon={<BarChart3 className="h-10 w-10" />}
+              title="No graded results yet"
+              action="View available exams"
+              href="/my-learning?tab=exams"
             />
           )}
         </TabsContent>
