@@ -68,6 +68,7 @@ const emptyLesson = {
   status: "DRAFT",
 };
 const emptyExam = {
+  id: "",
   title: "",
   startsAt: "",
   endsAt: "",
@@ -79,12 +80,13 @@ const emptyExam = {
   showScoreImmediately: true,
 };
 const emptyQuestion = {
+  id: "",
   examId: "",
   type: "MCQ" as InstructorQuestion["type"],
   marks: "1",
   title: "",
   description: "",
-  correctOption: true,
+  correctOption: null as boolean | null,
   options: [
     { option: "", isCorrect: true },
     { option: "", isCorrect: false },
@@ -93,6 +95,26 @@ const emptyQuestion = {
   ],
 };
 const backendDate = (value: string) => value.replace("T", " ").slice(0, 16);
+const frontendDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() + 330 * 60 * 1000).toISOString().slice(0, 16);
+};
+const AUTO_GRADABLE_QUESTION_TYPES: InstructorQuestion["type"][] = [
+  "MCQ",
+  "TRUE_FALSE",
+];
+
+function calculateQuestionMarks(items: InstructorQuestion[]) {
+  return items.reduce((total, item) => total + Number(item.marks || 0), 0);
+}
+
+function canAutoGrade(items: InstructorQuestion[]) {
+  return (
+    items.length > 0 &&
+    items.every((item) => AUTO_GRADABLE_QUESTION_TYPES.includes(item.type))
+  );
+}
 
 export function CourseContentManager({
   allowAnyCourse = false,
@@ -276,6 +298,7 @@ export function CourseContentManager({
     try {
       toast.success(
         await saveInstructorExam({
+          id: examForm.id || undefined,
           courseId,
           title: examForm.title,
           startsAt: backendDate(examForm.startsAt),
@@ -292,16 +315,60 @@ export function CourseContentManager({
       setExamForm(emptyExam);
       await load();
     } catch (err: any) {
-      toast.error(err?.message || "Unable to create exam.");
+      toast.error(err?.message || "Unable to save exam.");
     } finally {
       setSaving(false);
     }
+  }
+  function editExam(item: InstructorExam) {
+    setExamForm({
+      id: item.id,
+      title: item.title,
+      startsAt: frontendDate(item.startsAt),
+      endsAt: frontendDate(item.endsAt),
+      timeLimitMin: String(item.timeLimitMin),
+      maxAttempts: String(item.maxAttempts),
+      totalMarks: String(item.totalMarks),
+      passMarks: String(item.passMarks),
+      shuffleQuestions: item.shuffleQuestions,
+      showScoreImmediately: item.showScoreImmediately,
+    });
+    setExamOpen(true);
+  }
+  function addExam() {
+    setExamForm(emptyExam);
+    setExamOpen(true);
   }
   async function changeExamStatus(
     item: InstructorExam,
     status: InstructorExam["status"],
   ) {
     try {
+      if (status === "PUBLISHED") {
+        const examQuestions = await getInstructorQuestions(item.id);
+        const hasInvalidMarks = examQuestions.some((question) => {
+          const marks = Number(question.marks);
+          return !Number.isFinite(marks) || marks <= 0;
+        });
+
+        if (hasInvalidMarks) {
+          toast.error("Every question must have a positive numeric mark.");
+          return;
+        }
+
+        const allocatedMarks = calculateQuestionMarks(examQuestions);
+
+        if (allocatedMarks !== Number(item.totalMarks)) {
+          const difference = Number(item.totalMarks) - allocatedMarks;
+          toast.error(
+            difference > 0
+              ? `Question marks must total ${item.totalMarks}. Currently allocated: ${allocatedMarks}. Remaining: ${difference}.`
+              : `Question marks must total ${item.totalMarks}. Currently allocated: ${allocatedMarks}. Excess: ${Math.abs(difference)}.`,
+          );
+          return;
+        }
+      }
+
       toast.success(await setInstructorExamStatus(item.id, status));
       await load();
     } catch (err: any) {
@@ -319,6 +386,7 @@ export function CourseContentManager({
   }
   async function manageQuestions(item: InstructorExam) {
     setQuestionExam(item);
+    setQuestions([]);
     setQuestionsLoading(true);
     try {
       setQuestions(await getInstructorQuestions(item.id));
@@ -333,22 +401,85 @@ export function CourseContentManager({
     setQuestionForm({ ...emptyQuestion, examId: questionExam.id });
     setQuestionOpen(true);
   }
+  function editQuestion(item: InstructorQuestion) {
+    if (!questionExam) return;
+    const options =
+      item.type === "MCQ"
+        ? (item.options || []).map((option) => ({
+            option: option.option,
+            isCorrect: false,
+          }))
+        : emptyQuestion.options;
+
+    setQuestionForm({
+      id: item.id,
+      examId: questionExam.id,
+      type: item.type,
+      marks: String(item.marks),
+      title: item.title,
+      description: item.description,
+      correctOption: null,
+      options,
+    });
+    setQuestionOpen(true);
+  }
   async function submitQuestion(event: FormEvent) {
     event.preventDefault();
+    const marks = Number(questionForm.marks);
+
+    if (!Number.isFinite(marks) || marks <= 0) {
+      toast.error("Question marks must be a positive number.");
+      return;
+    }
+
+    if (
+      questionForm.type === "MCQ" &&
+      !questionForm.options.some((option) => option.isCorrect)
+    ) {
+      toast.error("Select the correct MCQ option.");
+      return;
+    }
+
+    if (
+      questionForm.type === "TRUE_FALSE" &&
+      questionForm.correctOption === null
+    ) {
+      toast.error("Select the correct True/False answer.");
+      return;
+    }
+
+    if (questionExam) {
+      const allocatedMarks = calculateQuestionMarks(questions);
+      const currentMarks = questionForm.id
+        ? Number(
+            questions.find((question) => question.id === questionForm.id)
+              ?.marks || 0,
+          )
+        : 0;
+      const nextTotal = allocatedMarks - currentMarks + marks;
+      if (nextTotal > Number(questionExam.totalMarks)) {
+        toast.error(
+          `This question would exceed the exam total of ${questionExam.totalMarks} marks. Currently allocated: ${allocatedMarks}.`,
+        );
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       toast.success(
         await saveInstructorQuestion({
+          id: questionForm.id || undefined,
           examId: questionForm.examId,
           type: questionForm.type,
-          marks: Number(questionForm.marks),
+          marks,
           title: questionForm.title,
           description: questionForm.description,
           options:
             questionForm.type === "MCQ" ? questionForm.options : undefined,
           correctOption:
             questionForm.type === "TRUE_FALSE"
-              ? questionForm.correctOption
+              ? (questionForm.correctOption ?? undefined)
               : undefined,
         }),
       );
@@ -356,7 +487,7 @@ export function CourseContentManager({
       if (questionExam)
         setQuestions(await getInstructorQuestions(questionExam.id));
     } catch (err: any) {
-      toast.error(err?.message || "Unable to create question.");
+      toast.error(err?.message || "Unable to save question.");
     } finally {
       setSaving(false);
     }
@@ -370,6 +501,12 @@ export function CourseContentManager({
       toast.error(err?.message || "Unable to delete question.");
     }
   }
+
+  const allocatedQuestionMarks = calculateQuestionMarks(questions);
+  const questionMarksMatch = questionExam
+    ? allocatedQuestionMarks === Number(questionExam.totalMarks)
+    : false;
+  const autoGradingEnabled = canAutoGrade(questions);
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} retry={load} />;
@@ -392,9 +529,7 @@ export function CourseContentManager({
         action={
           section !== "queries" ? (
             <Button
-              onClick={() =>
-                section === "lessons" ? editLesson() : setExamOpen(true)
-              }
+              onClick={() => (section === "lessons" ? editLesson() : addExam())}
             >
               <Plus className="mr-2 h-4 w-4" />
               {section === "lessons" ? "New lesson" : "New exam"}
@@ -510,6 +645,13 @@ export function CourseContentManager({
                   <option value="PUBLISHED">Published</option>
                   <option value="CLOSED">Closed</option>
                 </select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => editExam(item)}
+                >
+                  Edit
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -746,8 +888,14 @@ export function CourseContentManager({
         <DialogContent className="max-w-2xl">
           <form onSubmit={submitExam}>
             <DialogHeader>
-              <DialogTitle>Create exam</DialogTitle>
-              <DialogDescription>New exams begin as drafts.</DialogDescription>
+              <DialogTitle>
+                {examForm.id ? "Edit exam" : "Create exam"}
+              </DialogTitle>
+              <DialogDescription>
+                {examForm.id
+                  ? "Updating an exam returns it to draft status."
+                  : "New exams begin as drafts."}
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-5 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
@@ -866,7 +1014,11 @@ export function CourseContentManager({
                 Cancel
               </Button>
               <Button disabled={saving}>
-                {saving ? "Creating…" : "Create exam"}
+                {saving
+                  ? "Saving…"
+                  : examForm.id
+                    ? "Save changes"
+                    : "Create exam"}
               </Button>
             </DialogFooter>
           </form>
@@ -884,6 +1036,42 @@ export function CourseContentManager({
               Create and remove assessment questions.
             </DialogDescription>
           </DialogHeader>
+          {!questionsLoading && questionExam && (
+            <div className="grid gap-3 rounded-xl border bg-slate-50 p-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Allocated marks
+                </p>
+                <p
+                  className={`mt-1 font-semibold ${
+                    questionMarksMatch ? "text-emerald-700" : "text-amber-700"
+                  }`}
+                >
+                  {allocatedQuestionMarks} / {questionExam.totalMarks}
+                </p>
+                {!questionMarksMatch && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    Question marks must equal the exam total before publishing.
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Auto-grading
+                </p>
+                <p
+                  className={`mt-1 font-semibold ${
+                    autoGradingEnabled ? "text-emerald-700" : "text-slate-600"
+                  }`}
+                >
+                  {autoGradingEnabled ? "On" : "Off"}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Available only when every question is MCQ or True/False.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex justify-end">
             <Button size="sm" onClick={addQuestion}>
               <Plus className="mr-2 h-4 w-4" />
@@ -908,6 +1096,13 @@ export function CourseContentManager({
                         {item.type.replaceAll("_", " ")} · {item.marks} marks
                       </p>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => editQuestion(item)}
+                    >
+                      Edit
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -934,9 +1129,13 @@ export function CourseContentManager({
         <DialogContent className="max-w-2xl">
           <form onSubmit={submitQuestion}>
             <DialogHeader>
-              <DialogTitle>Add question</DialogTitle>
+              <DialogTitle>
+                {questionForm.id ? "Edit question" : "Add question"}
+              </DialogTitle>
               <DialogDescription>
-                MCQ questions require at least one correct option.
+                {questionForm.id
+                  ? "Reselect the correct answer before saving an auto-graded question."
+                  : "MCQ questions require one correct option."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-5 sm:grid-cols-2">
@@ -962,6 +1161,12 @@ export function CourseContentManager({
                     <option key={type}>{type}</option>
                   ))}
                 </select>
+                {!AUTO_GRADABLE_QUESTION_TYPES.includes(questionForm.type) && (
+                  <p className="text-xs text-amber-700">
+                    Adding this question type will turn auto-grading off for the
+                    exam.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Marks</Label>
@@ -1011,6 +1216,7 @@ export function CourseContentManager({
                   {questionForm.options.map((option, index) => (
                     <div key={index} className="flex gap-2">
                       <input
+                        required
                         type="radio"
                         name="correct-option"
                         checked={option.isCorrect}
@@ -1056,6 +1262,7 @@ export function CourseContentManager({
                         className="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm capitalize"
                       >
                         <input
+                          required
                           type="radio"
                           name="correct-true-false-answer"
                           checked={questionForm.correctOption === value}
@@ -1082,7 +1289,11 @@ export function CourseContentManager({
                 Cancel
               </Button>
               <Button disabled={saving}>
-                {saving ? "Adding…" : "Add question"}
+                {saving
+                  ? "Saving…"
+                  : questionForm.id
+                    ? "Save changes"
+                    : "Add question"}
               </Button>
             </DialogFooter>
           </form>
