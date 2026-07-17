@@ -57,6 +57,12 @@ export type Certificate = {
   issuedAt: string;
 };
 
+const checkoutRequests = new Map<string, Promise<Order>>();
+
+function pendingCheckoutKey(courseId: number | string, pricingPlanId?: string) {
+  return `eduportal:checkout:${courseId}:${pricingPlanId || "cheapest"}`;
+}
+
 function entity<T>(response: any): T {
   if (!response?.status || response?.data == null)
     throw new Error(response?.message || "Request failed");
@@ -122,12 +128,46 @@ export async function createCheckout(
   courseId: number | string,
   pricingPlanId?: string,
 ) {
-  return entity<Order>(
-    await instance.post("/checkout/session", {
-      courseId: Number(courseId),
-      pricingPlanId,
-    }),
-  );
+  const requestKey = `${courseId}:${pricingPlanId || "cheapest"}`;
+  const activeRequest = checkoutRequests.get(requestKey);
+  if (activeRequest) return activeRequest;
+
+  const request = (async () => {
+    const storageKey = pendingCheckoutKey(courseId, pricingPlanId);
+    if (typeof window !== "undefined") {
+      const existingOrderId = window.localStorage.getItem(storageKey);
+      if (existingOrderId) {
+        try {
+          const existingOrder = await getOrder(existingOrderId);
+          if (
+            existingOrder.status === "PENDING" ||
+            existingOrder.status === "PAID"
+          )
+            return existingOrder;
+          window.localStorage.removeItem(storageKey);
+        } catch {
+          window.localStorage.removeItem(storageKey);
+        }
+      }
+    }
+
+    const order = entity<Order>(
+      await instance.post("/checkout/session", {
+        courseId: Number(courseId),
+        pricingPlanId,
+      }),
+    );
+    if (typeof window !== "undefined" && order.status === "PENDING")
+      window.localStorage.setItem(storageKey, order.id);
+    return order;
+  })();
+
+  checkoutRequests.set(requestKey, request);
+  try {
+    return await request;
+  } finally {
+    checkoutRequests.delete(requestKey);
+  }
 }
 export async function getOrder(orderId: string) {
   return entity<Order>(await instance.get(`/orders/${orderId}`));
