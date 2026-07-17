@@ -160,6 +160,7 @@ export type AdminOrder = {
   amount: number;
   currency: string;
   status: "PENDING" | "PAID" | "FAILED";
+  paymentReference?: string;
   createdAt?: string;
 };
 
@@ -573,6 +574,17 @@ export async function getAdminOrders(
 ) {
   return toPage<AdminOrder>(
     await instance.get("/admin/orders", { params: { page, limit, status } }),
+  );
+}
+
+export async function confirmAdminOrder(
+  orderId: string,
+  paymentReference: string,
+) {
+  return message(
+    await instance.post(`/admin/orders/${orderId}/confirm`, {
+      paymentReference,
+    }),
   );
 }
 
