@@ -27,6 +27,16 @@ import {
   PageHeading,
 } from "../../_components/admin-ui";
 
+function canParticipate(conversation: Conversation, userId?: string) {
+  if (!userId) return false;
+
+  return (
+    conversation.type === "SUPPORT" ||
+    conversation.initiatorId === userId ||
+    conversation.recipientId === userId
+  );
+}
+
 export default function AdminConversationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -49,14 +59,14 @@ export default function AdminConversationDetailPage() {
       ]);
       setConversation(detail);
       setMessages([...messagePage.data].reverse());
-      if (detail.type === "SUPPORT")
+      if (canParticipate(detail, user?.id))
         void markConversationRead(id).catch(() => undefined);
     } catch (requestError: any) {
       setError(requestError?.message || "Unable to load conversation");
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user?.id]);
 
   useEffect(() => {
     void load();
@@ -68,8 +78,10 @@ export default function AdminConversationDetailPage() {
         ? current
         : [...current, latestMessage],
     );
-    void markConversationRead(id).catch(() => undefined);
-  }, [id, latestMessage]);
+    if (conversation && canParticipate(conversation, user?.id)) {
+      void markConversationRead(id).catch(() => undefined);
+    }
+  }, [conversation, id, latestMessage, user?.id]);
 
   async function send(event: FormEvent) {
     event.preventDefault();
@@ -149,7 +161,7 @@ export default function AdminConversationDetailPage() {
         action={
           conversation && (
             <div className="flex gap-2">
-              {conversation.type === "SUPPORT" && (
+              {canParticipate(conversation, user?.id) && (
                 <Button variant="outline" onClick={() => void toggleStatus()}>
                   {conversation.status === "OPEN" ? "Close" : "Reopen"}
                 </Button>
@@ -207,7 +219,7 @@ export default function AdminConversationDetailPage() {
               );
             })}
           </div>
-          {conversation.type === "SUPPORT" ? (
+          {canParticipate(conversation, user?.id) ? (
             <form onSubmit={send} className="flex items-end gap-3 border-t p-4">
               <Textarea
                 value={content}
@@ -215,7 +227,11 @@ export default function AdminConversationDetailPage() {
                 required
                 maxLength={5000}
                 rows={2}
-                placeholder="Reply to this support request"
+                placeholder={
+                  conversation.type === "SUPPORT"
+                    ? "Reply to this support request"
+                    : "Write a reply"
+                }
               />
               <Button disabled={sending || !content.trim()}>
                 <Send className="mr-2 h-4 w-4" />
@@ -224,8 +240,8 @@ export default function AdminConversationDetailPage() {
             </form>
           ) : (
             <p className="border-t p-4 text-sm text-slate-500">
-              Private direct threads are moderation-only. Admin replies are
-              disabled.
+              You are viewing this private direct thread as a moderator. Only
+              its participants can reply or change its status.
             </p>
           )}
         </div>
