@@ -141,6 +141,7 @@ export async function saveInstructorCourse(input: {
   categoryId: string;
   isFeatured: boolean;
   level: string;
+  pricingPlanId?: string;
   price?: number;
   currency?: string;
   planType?: "MONTHLY" | "QUARTERLY" | "YEARLY" | "LIFETIME";

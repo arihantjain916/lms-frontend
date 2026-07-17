@@ -31,7 +31,7 @@ export type Course = {
 
 export type PricingPlan = {
   id: string;
-  courseId: number;
+  courseIds: number[];
   title: string;
   description: string;
   currency: string;

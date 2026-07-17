@@ -27,9 +27,11 @@ import {
   deleteAdminCourse,
   getAdminCategories,
   getAdminCourses,
+  getPricingPlanCatalog,
   saveAdminCourse,
   type AdminCategory,
   type AdminCourse,
+  type AdminPricingPlan,
 } from "@/lib/admin-api";
 
 const emptyForm = {
@@ -40,6 +42,7 @@ const emptyForm = {
   categoryId: "",
   isFeatured: false,
   level: "BEGINNER",
+  pricingPlanId: "",
   price: "",
   currency: "INR",
   planType: "LIFETIME",
@@ -54,6 +57,7 @@ const slugify = (value: string) =>
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [pricingCatalog, setPricingCatalog] = useState<AdminPricingPlan[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(0);
   const [total, setTotal] = useState(0);
@@ -68,14 +72,16 @@ export default function AdminCoursesPage() {
     setLoading(true);
     setError("");
     try {
-      const [coursePage, categoryList] = await Promise.all([
+      const [coursePage, categoryList, planCatalog] = await Promise.all([
         getAdminCourses(page, 10),
         getAdminCategories(),
+        getPricingPlanCatalog(),
       ]);
       setCourses(coursePage.data);
       setPages(coursePage.totalPages);
       setTotal(coursePage.totalElements);
       setCategories(categoryList);
+      setPricingCatalog(planCatalog);
     } catch (err: any) {
       setError(err?.message || "Unable to load courses.");
     } finally {
@@ -108,6 +114,7 @@ export default function AdminCoursesPage() {
       categoryId: item.category?.id || "",
       isFeatured: Boolean(item.isFeatured),
       level: item.level || "BEGINNER",
+      pricingPlanId: "",
       price: "",
       currency: "INR",
       planType: "LIFETIME",
@@ -126,10 +133,18 @@ export default function AdminCoursesPage() {
         isFeatured: form.isFeatured,
         level: form.level,
         id: form.id || undefined,
-        price: !form.id && form.price !== "" ? Number(form.price) : undefined,
-        currency: !form.id && form.price !== "" ? form.currency : undefined,
+        pricingPlanId:
+          !form.id && form.pricingPlanId ? form.pricingPlanId : undefined,
+        price:
+          !form.id && !form.pricingPlanId && form.price !== ""
+            ? Number(form.price)
+            : undefined,
+        currency:
+          !form.id && !form.pricingPlanId && form.price !== ""
+            ? form.currency
+            : undefined,
         planType:
-          !form.id && form.price !== ""
+          !form.id && !form.pricingPlanId && form.price !== ""
             ? (form.planType as "MONTHLY" | "QUARTERLY" | "YEARLY" | "LIFETIME")
             : undefined,
       });
@@ -371,55 +386,91 @@ export default function AdminCoursesPage() {
               </div>
               {!form.id && (
                 <>
-                  <div className="space-y-2">
-                    <Label htmlFor="course-price">Initial price</Label>
-                    <Input
-                      id="course-price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.price}
-                      onChange={(event) =>
-                        setForm({ ...form, price: event.target.value })
-                      }
-                      placeholder="Leave blank for no plan"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="course-currency">Currency</Label>
-                    <Input
-                      id="course-currency"
-                      required={form.price !== ""}
-                      minLength={3}
-                      maxLength={3}
-                      value={form.currency}
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="course-existing-plan">
+                      Reuse an existing pricing plan
+                    </Label>
+                    <select
+                      id="course-existing-plan"
+                      className="flex h-10 w-full rounded-md border bg-white px-3 text-sm"
+                      value={form.pricingPlanId}
                       onChange={(event) =>
                         setForm({
                           ...form,
-                          currency: event.target.value.toUpperCase(),
+                          pricingPlanId: event.target.value,
+                          price: event.target.value ? "" : form.price,
                         })
                       }
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="course-plan-type">Initial plan type</Label>
-                    <select
-                      id="course-plan-type"
-                      className="flex h-10 w-full rounded-md border bg-white px-3 text-sm"
-                      value={form.planType}
-                      onChange={(event) =>
-                        setForm({ ...form, planType: event.target.value })
-                      }
                     >
-                      {["MONTHLY", "QUARTERLY", "YEARLY", "LIFETIME"].map(
-                        (type) => (
-                          <option key={type} value={type}>
-                            {type.charAt(0) + type.slice(1).toLowerCase()}
-                          </option>
-                        ),
-                      )}
+                      <option value="">
+                        No existing plan — create a new plan or leave free
+                      </option>
+                      {pricingCatalog.map((plan) => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.title} · {plan.currency} {plan.price} ·{" "}
+                          {plan.planType}
+                        </option>
+                      ))}
                     </select>
+                    <p className="text-xs text-slate-500">
+                      Reused plans stay synchronized wherever they are attached.
+                    </p>
                   </div>
+                  {!form.pricingPlanId && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="course-price">Initial price</Label>
+                        <Input
+                          id="course-price"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.price}
+                          onChange={(event) =>
+                            setForm({ ...form, price: event.target.value })
+                          }
+                          placeholder="Leave blank for no plan"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="course-currency">Currency</Label>
+                        <Input
+                          id="course-currency"
+                          required={form.price !== ""}
+                          minLength={3}
+                          maxLength={3}
+                          value={form.currency}
+                          onChange={(event) =>
+                            setForm({
+                              ...form,
+                              currency: event.target.value.toUpperCase(),
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="course-plan-type">
+                          Initial plan type
+                        </Label>
+                        <select
+                          id="course-plan-type"
+                          className="flex h-10 w-full rounded-md border bg-white px-3 text-sm"
+                          value={form.planType}
+                          onChange={(event) =>
+                            setForm({ ...form, planType: event.target.value })
+                          }
+                        >
+                          {["MONTHLY", "QUARTERLY", "YEARLY", "LIFETIME"].map(
+                            (type) => (
+                              <option key={type} value={type}>
+                                {type.charAt(0) + type.slice(1).toLowerCase()}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
               <label className="flex items-center gap-3 rounded-lg border p-3 text-sm sm:col-span-2">

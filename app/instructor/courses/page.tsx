@@ -22,7 +22,12 @@ import {
   LoadingState,
   PageHeading,
 } from "@/app/admin/_components/admin-ui";
-import { getAdminCategories, type AdminCategory } from "@/lib/admin-api";
+import {
+  getAdminCategories,
+  getPricingPlanCatalog,
+  type AdminCategory,
+  type AdminPricingPlan,
+} from "@/lib/admin-api";
 import {
   deleteInstructorCourse,
   getInstructorCourses,
@@ -38,6 +43,7 @@ const emptyForm = {
   categoryId: "",
   isFeatured: false,
   level: "BEGINNER",
+  pricingPlanId: "",
   price: "",
   currency: "INR",
   planType: "LIFETIME",
@@ -52,6 +58,7 @@ const slugify = (value: string) =>
 export default function InstructorCoursesPage() {
   const [items, setItems] = useState<InstructorCourse[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [pricingCatalog, setPricingCatalog] = useState<AdminPricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
@@ -61,12 +68,14 @@ export default function InstructorCoursesPage() {
     setLoading(true);
     setError("");
     try {
-      const [courses, categoryList] = await Promise.all([
+      const [courses, categoryList, planCatalog] = await Promise.all([
         getInstructorCourses(),
         getAdminCategories(),
+        getPricingPlanCatalog(),
       ]);
       setItems(courses);
       setCategories(categoryList);
+      setPricingCatalog(planCatalog);
     } catch (err: any) {
       setError(err?.message || "Unable to load your courses.");
     } finally {
@@ -87,6 +96,7 @@ export default function InstructorCoursesPage() {
             categoryId: item.category?.id || "",
             isFeatured: Boolean(item.isFeatured),
             level: item.level || "BEGINNER",
+            pricingPlanId: "",
             price: "",
             currency: "INR",
             planType: "LIFETIME",
@@ -108,10 +118,18 @@ export default function InstructorCoursesPage() {
           isFeatured: form.isFeatured,
           level: form.level,
           id: form.id || undefined,
-          price: !form.id && form.price !== "" ? Number(form.price) : undefined,
-          currency: !form.id && form.price !== "" ? form.currency : undefined,
+          pricingPlanId:
+            !form.id && form.pricingPlanId ? form.pricingPlanId : undefined,
+          price:
+            !form.id && !form.pricingPlanId && form.price !== ""
+              ? Number(form.price)
+              : undefined,
+          currency:
+            !form.id && !form.pricingPlanId && form.price !== ""
+              ? form.currency
+              : undefined,
           planType:
-            !form.id && form.price !== ""
+            !form.id && !form.pricingPlanId && form.price !== ""
               ? (form.planType as
                   | "MONTHLY"
                   | "QUARTERLY"
@@ -295,6 +313,38 @@ export default function InstructorCoursesPage() {
               </div>
               {!form.id && (
                 <>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="i-course-existing-plan">
+                      Reuse an existing pricing plan
+                    </Label>
+                    <select
+                      id="i-course-existing-plan"
+                      className="h-10 w-full rounded-md border bg-white px-3 text-sm"
+                      value={form.pricingPlanId}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          pricingPlanId: event.target.value,
+                          price: event.target.value ? "" : form.price,
+                        })
+                      }
+                    >
+                      <option value="">
+                        No existing plan — create a new plan or leave free
+                      </option>
+                      {pricingCatalog.map((plan) => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.title} · {plan.currency} {plan.price} ·{" "}
+                          {plan.planType}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-500">
+                      Reused plans stay synchronized wherever they are attached.
+                    </p>
+                  </div>
+                  {!form.pricingPlanId && (
+                    <>
                   <div className="space-y-2">
                     <Label htmlFor="i-course-price">Initial price</Label>
                     <Input
@@ -346,6 +396,8 @@ export default function InstructorCoursesPage() {
                       )}
                     </select>
                   </div>
+                    </>
+                  )}
                 </>
               )}
               <label className="flex items-center gap-3 rounded-lg border p-3 text-sm sm:col-span-2">

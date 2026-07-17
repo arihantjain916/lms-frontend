@@ -27,7 +27,7 @@ export type AdminCourse = {
 
 export type AdminPricingPlan = {
   id: string;
-  courseId: number;
+  courseIds: number[];
   title: string;
   description: string;
   currency: string;
@@ -332,6 +332,7 @@ export async function saveAdminCourse(input: {
   categoryId: string;
   isFeatured: boolean;
   level: string;
+  pricingPlanId?: string;
   price?: number;
   currency?: string;
   planType?: AdminPricingPlan["planType"];
@@ -354,6 +355,20 @@ export async function deleteAdminCourse(id: number) {
 export async function getAdminPricingPlans(courseId: number) {
   return data<AdminPricingPlan[]>(
     await instance.get(`/pricing/course/${courseId}`),
+  );
+}
+
+export async function getPricingPlanCatalog() {
+  return data<AdminPricingPlan[]>(await instance.get("/pricing"));
+}
+
+export async function attachPricingPlan(planId: string, courseId: number) {
+  return message(await instance.post(`/pricing/${planId}/courses/${courseId}`));
+}
+
+export async function detachPricingPlan(planId: string, courseId: number) {
+  return message(
+    await instance.delete(`/pricing/${planId}/courses/${courseId}`),
   );
 }
 

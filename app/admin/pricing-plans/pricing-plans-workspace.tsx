@@ -1,7 +1,14 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { BadgeDollarSign, Edit3, Plus, Trash2 } from "lucide-react";
+import {
+  BadgeDollarSign,
+  Edit3,
+  Link2,
+  Plus,
+  Trash2,
+  Unlink,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,9 +29,12 @@ import {
   PageHeading,
 } from "../_components/admin-ui";
 import {
+  attachPricingPlan,
   deleteAdminPricingPlan,
+  detachPricingPlan,
   getAdminCourses,
   getAdminPricingPlans,
+  getPricingPlanCatalog,
   saveAdminPricingPlan,
   type AdminCourse,
   type AdminPricingPlan,
@@ -71,6 +81,9 @@ export function PricingPlansWorkspace({
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [courseId, setCourseId] = useState(0);
   const [plans, setPlans] = useState<AdminPricingPlan[]>([]);
+  const [catalog, setCatalog] = useState<AdminPricingPlan[]>([]);
+  const [attachPlanId, setAttachPlanId] = useState("");
+  const [attaching, setAttaching] = useState(false);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(false);
   const [error, setError] = useState("");
@@ -103,7 +116,13 @@ export function PricingPlansWorkspace({
     setPlansLoading(true);
     setError("");
     try {
-      setPlans(await getAdminPricingPlans(courseId));
+      const [attachedPlans, allPlans] = await Promise.all([
+        getAdminPricingPlans(courseId),
+        getPricingPlanCatalog(),
+      ]);
+      setPlans(attachedPlans);
+      setCatalog(allPlans);
+      setAttachPlanId("");
     } catch (err: any) {
       setError(err?.message || "Unable to load pricing plans.");
     } finally {
@@ -163,7 +182,41 @@ export function PricingPlansWorkspace({
     }
   }
 
+  async function attach() {
+    if (!attachPlanId || !courseId) return;
+    setAttaching(true);
+    try {
+      toast.success(await attachPricingPlan(attachPlanId, courseId));
+      await loadPlans();
+    } catch (err: any) {
+      toast.error(err?.message || "Unable to attach pricing plan.");
+    } finally {
+      setAttaching(false);
+    }
+  }
+
+  async function detach(plan: AdminPricingPlan) {
+    if (
+      !window.confirm(
+        `Detach “${plan.title}” from ${selectedCourse?.title || "this course"}?`,
+      )
+    )
+      return;
+    try {
+      toast.success(await detachPricingPlan(plan.id, courseId));
+      await loadPlans();
+    } catch (err: any) {
+      toast.error(err?.message || "Unable to detach pricing plan.");
+    }
+  }
+
   const selectedCourse = courses.find((course) => course.id === courseId);
+  const editingPlan = catalog.find((plan) => plan.id === form.id);
+  const attachedTypes = new Set(plans.map((plan) => plan.planType));
+  const availablePlans = catalog.filter(
+    (plan) =>
+      !plan.courseIds.includes(courseId) && !attachedTypes.has(plan.planType),
+  );
 
   return (
     <>
@@ -178,25 +231,64 @@ export function PricingPlansWorkspace({
       />
 
       <div className="mb-5 rounded-2xl border bg-white p-5 shadow-sm">
-        <div className="max-w-xl space-y-2">
-          <Label htmlFor="pricing-course">Course</Label>
-          <select
-            id="pricing-course"
-            className="flex h-10 w-full rounded-md border bg-white px-3 text-sm"
-            value={courseId || ""}
-            disabled={coursesLoading || !courses.length}
-            onChange={(event) => setCourseId(Number(event.target.value))}
-          >
-            {!courses.length && <option value="">No courses available</option>}
-            {courses.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.title}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-slate-500">
-            Plans are unique by billing type for each course.
-          </p>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="pricing-course">Course</Label>
+            <select
+              id="pricing-course"
+              className="flex h-10 w-full rounded-md border bg-white px-3 text-sm"
+              value={courseId || ""}
+              disabled={coursesLoading || !courses.length}
+              onChange={(event) => setCourseId(Number(event.target.value))}
+            >
+              {!courses.length && (
+                <option value="">No courses available</option>
+              )}
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.title}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500">
+              Plans are unique by billing type for each course.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="attach-pricing-plan">Attach existing plan</Label>
+            <div className="flex gap-2">
+              <select
+                id="attach-pricing-plan"
+                className="flex h-10 min-w-0 flex-1 rounded-md border bg-white px-3 text-sm"
+                value={attachPlanId}
+                disabled={!courseId || !availablePlans.length || attaching}
+                onChange={(event) => setAttachPlanId(event.target.value)}
+              >
+                <option value="">
+                  {availablePlans.length
+                    ? "Choose from pricing catalog"
+                    : "No compatible plans available"}
+                </option>
+                {availablePlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.title} · {formatPrice(plan)} · {plan.planType}
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!attachPlanId || attaching}
+                onClick={attach}
+              >
+                <Link2 className="mr-2 h-4 w-4" />
+                {attaching ? "Attaching…" : "Attach"}
+              </Button>
+            </div>
+            <p className="text-xs text-slate-500">
+              Reusing a plan keeps its price synchronized across courses.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -243,6 +335,10 @@ export function PricingPlansWorkspace({
                           <p className="mt-0.5 line-clamp-1 max-w-md text-xs text-slate-500">
                             {plan.description}
                           </p>
+                          <p className="mt-1 text-xs text-slate-400">
+                            Used by {plan.courseIds.length} course
+                            {plan.courseIds.length === 1 ? "" : "s"}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -267,8 +363,21 @@ export function PricingPlansWorkspace({
                         <Button
                           variant="outline"
                           size="icon"
-                          title="Delete pricing plan"
+                          title="Detach pricing plan from this course"
+                          onClick={() => detach(plan)}
+                        >
+                          <Unlink className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          title={
+                            plan.courseIds.length > 1
+                              ? "Shared plans must be detached, not deleted"
+                              : "Delete pricing plan"
+                          }
                           className="text-red-600 hover:bg-red-50"
+                          disabled={plan.courseIds.length > 1}
                           onClick={() => remove(plan)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -291,9 +400,11 @@ export function PricingPlansWorkspace({
                 {form.id ? "Edit pricing plan" : "Create pricing plan"}
               </DialogTitle>
               <DialogDescription>
-                {selectedCourse
-                  ? `Set the purchase option for ${selectedCourse.title}.`
-                  : "Set the course purchase option."}
+                {editingPlan && editingPlan.courseIds.length > 1
+                  ? `This shared plan is used by ${editingPlan.courseIds.length} courses. Saving changes reprices all of them.`
+                  : selectedCourse
+                    ? `Set the purchase option for ${selectedCourse.title}.`
+                    : "Set the course purchase option."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-5 sm:grid-cols-2">
