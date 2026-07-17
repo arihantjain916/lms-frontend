@@ -30,12 +30,13 @@ import {
 } from "../_components/admin-ui";
 import {
   attachPricingPlan,
+  createPricingPlan,
   deleteAdminPricingPlan,
   detachPricingPlan,
   getAdminCourses,
   getAdminPricingPlans,
   getPricingPlanCatalog,
-  saveAdminPricingPlan,
+  updatePricingPlan,
   type AdminCourse,
   type AdminPricingPlan,
 } from "@/lib/admin-api";
@@ -154,14 +155,16 @@ export function PricingPlansWorkspace({
     event.preventDefault();
     setSaving(true);
     try {
-      const result = await saveAdminPricingPlan(courseId, {
-        id: form.id || undefined,
+      const payload = {
         title: form.title.trim(),
         description: form.description.trim(),
         currency: form.currency.trim().toUpperCase(),
         price: Number(form.price),
         planType: form.planType,
-      });
+      };
+      const result = form.id
+        ? await updatePricingPlan(form.id, payload)
+        : await createPricingPlan(courseId, payload);
       toast.success(result);
       setOpen(false);
       await loadPlans();

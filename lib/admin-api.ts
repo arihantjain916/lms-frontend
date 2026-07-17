@@ -372,15 +372,18 @@ export async function detachPricingPlan(planId: string, courseId: number) {
   );
 }
 
-export async function saveAdminPricingPlan(
+export async function createPricingPlan(
   courseId: number,
-  input: AdminPricingPlanInput & { id?: string },
+  input: AdminPricingPlanInput,
 ) {
-  const { id, ...payload } = input;
-  const response: any = id
-    ? await instance.put(`/pricing/${id}`, payload)
-    : await instance.post(`/pricing/course/${courseId}`, payload);
-  return message(response);
+  return message(await instance.post(`/pricing/course/${courseId}`, input));
+}
+
+export async function updatePricingPlan(
+  planId: string,
+  input: AdminPricingPlanInput,
+) {
+  return message(await instance.put(`/pricing/${planId}`, input));
 }
 
 export async function deleteAdminPricingPlan(id: string) {
