@@ -29,6 +29,18 @@ export type Course = {
   isEnrolled?: boolean;
 };
 
+export type PricingPlan = {
+  id: string;
+  courseId: number;
+  title: string;
+  description: string;
+  currency: string;
+  price: number;
+  planType: "MONTHLY" | "QUARTERLY" | "YEARLY" | "LIFETIME";
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type Lesson = {
   id: string;
   time?: string;
@@ -115,6 +127,11 @@ export async function getFeaturedCourses(limit = 3) {
 export async function getCourse(courseId: string | number) {
   const response: any = await instance.get(`/courses/${courseId}`);
   return entity<Course>(response);
+}
+
+export async function getCoursePricingPlans(courseId: string | number) {
+  const response: any = await instance.get(`/pricing/course/${courseId}`);
+  return entity<PricingPlan[]>(response);
 }
 
 export async function getCourseCurriculum(

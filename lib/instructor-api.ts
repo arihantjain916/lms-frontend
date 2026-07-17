@@ -141,6 +141,9 @@ export async function saveInstructorCourse(input: {
   categoryId: string;
   isFeatured: boolean;
   level: string;
+  price?: number;
+  currency?: string;
+  planType?: "MONTHLY" | "QUARTERLY" | "YEARLY" | "LIFETIME";
 }) {
   return message(
     input.id

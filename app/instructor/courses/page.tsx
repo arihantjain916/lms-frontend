@@ -38,6 +38,9 @@ const emptyForm = {
   categoryId: "",
   isFeatured: false,
   level: "BEGINNER",
+  price: "",
+  currency: "INR",
+  planType: "LIFETIME",
 };
 const slugify = (value: string) =>
   value
@@ -84,6 +87,9 @@ export default function InstructorCoursesPage() {
             categoryId: item.category?.id || "",
             isFeatured: Boolean(item.isFeatured),
             level: item.level || "BEGINNER",
+            price: "",
+            currency: "INR",
+            planType: "LIFETIME",
           }
         : { ...emptyForm, categoryId: categories[0]?.id || "" },
     );
@@ -94,7 +100,25 @@ export default function InstructorCoursesPage() {
     setSaving(true);
     try {
       toast.success(
-        await saveInstructorCourse({ ...form, id: form.id || undefined }),
+        await saveInstructorCourse({
+          title: form.title,
+          slug: form.slug,
+          description: form.description,
+          categoryId: form.categoryId,
+          isFeatured: form.isFeatured,
+          level: form.level,
+          id: form.id || undefined,
+          price: !form.id && form.price !== "" ? Number(form.price) : undefined,
+          currency: !form.id && form.price !== "" ? form.currency : undefined,
+          planType:
+            !form.id && form.price !== ""
+              ? (form.planType as
+                  | "MONTHLY"
+                  | "QUARTERLY"
+                  | "YEARLY"
+                  | "LIFETIME")
+              : undefined,
+        }),
       );
       setOpen(false);
       await load();
@@ -269,6 +293,61 @@ export default function InstructorCoursesPage() {
                   }
                 />
               </div>
+              {!form.id && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="i-course-price">Initial price</Label>
+                    <Input
+                      id="i-course-price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.price}
+                      onChange={(event) =>
+                        setForm({ ...form, price: event.target.value })
+                      }
+                      placeholder="Leave blank for no plan"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="i-course-currency">Currency</Label>
+                    <Input
+                      id="i-course-currency"
+                      required={form.price !== ""}
+                      minLength={3}
+                      maxLength={3}
+                      value={form.currency}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          currency: event.target.value.toUpperCase(),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="i-course-plan-type">
+                      Initial plan type
+                    </Label>
+                    <select
+                      id="i-course-plan-type"
+                      className="h-10 w-full rounded-md border bg-white px-3 text-sm"
+                      value={form.planType}
+                      onChange={(event) =>
+                        setForm({ ...form, planType: event.target.value })
+                      }
+                    >
+                      {["MONTHLY", "QUARTERLY", "YEARLY", "LIFETIME"].map(
+                        (type) => (
+                          <option key={type} value={type}>
+                            {type.charAt(0) + type.slice(1).toLowerCase()}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
+                </>
+              )}
               <label className="flex items-center gap-3 rounded-lg border p-3 text-sm sm:col-span-2">
                 <input
                   type="checkbox"

@@ -21,8 +21,26 @@ export type AdminCourse = {
   level: string;
   avgRating?: number;
   totalRating?: number;
+  price?: number | null;
   createdAt?: string;
 };
+
+export type AdminPricingPlan = {
+  id: string;
+  courseId: number;
+  title: string;
+  description: string;
+  currency: string;
+  price: number;
+  planType: "MONTHLY" | "QUARTERLY" | "YEARLY" | "LIFETIME";
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AdminPricingPlanInput = Pick<
+  AdminPricingPlan,
+  "title" | "description" | "currency" | "price" | "planType"
+>;
 
 export type AdminBlog = {
   id: string;
@@ -314,6 +332,9 @@ export async function saveAdminCourse(input: {
   categoryId: string;
   isFeatured: boolean;
   level: string;
+  price?: number;
+  currency?: string;
+  planType?: AdminPricingPlan["planType"];
 }) {
   if (input.title.length > 255)
     throw new Error("Course title must be 255 characters or fewer.");
@@ -328,6 +349,27 @@ export async function saveAdminCourse(input: {
 
 export async function deleteAdminCourse(id: number) {
   return message(await instance.delete(`/course/delete/${id}`));
+}
+
+export async function getAdminPricingPlans(courseId: number) {
+  return data<AdminPricingPlan[]>(
+    await instance.get(`/pricing/course/${courseId}`),
+  );
+}
+
+export async function saveAdminPricingPlan(
+  courseId: number,
+  input: AdminPricingPlanInput & { id?: string },
+) {
+  const { id, ...payload } = input;
+  const response: any = id
+    ? await instance.put(`/pricing/${id}`, payload)
+    : await instance.post(`/pricing/course/${courseId}`, payload);
+  return message(response);
+}
+
+export async function deleteAdminPricingPlan(id: string) {
+  return message(await instance.delete(`/pricing/${id}`));
 }
 
 export async function getAdminBlogs(page = 1, size = 10) {

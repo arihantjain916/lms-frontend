@@ -29,10 +29,12 @@ import {
   getCourse,
   getCourseCurriculum,
   getCourseInstructor,
+  getCoursePricingPlans,
   getCourseReviews,
   getRelatedCourses,
   Instructor,
   Lesson,
+  PricingPlan,
 } from "@/lib/course-api";
 import { useAuth } from "@/hooks/use-authenticated";
 import {
@@ -70,12 +72,16 @@ import {
 import { loginHref } from "@/lib/auth-navigation";
 import { usePageRestoreKey } from "@/hooks/use-page-restore-key";
 
-function formatPrice(value?: number | null) {
+function formatPrice(value?: number | null, currency = "INR") {
   if (!value) return "Free";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+    }).format(value);
+  } catch {
+    return `${currency} ${value}`;
+  }
 }
 
 function formatDate(value?: string) {
@@ -109,6 +115,8 @@ export default function CourseDetailPage() {
   const [instructor, setInstructor] = useState<Instructor | null>(null);
   const [reviews, setReviews] = useState<CourseReview[]>([]);
   const [related, setRelated] = useState<Course[]>([]);
+  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [reviewTotal, setReviewTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -126,6 +134,8 @@ export default function CourseDetailPage() {
   const [questionPage, setQuestionPage] = useState(1);
   const [questionPages, setQuestionPages] = useState(1);
   const resolvedCourseId = course?.id;
+  const selectedPlan =
+    pricingPlans.find((plan) => plan.id === selectedPlanId) || pricingPlans[0];
 
   const loadQuestions = useCallback(async () => {
     if (!resolvedCourseId) return;
@@ -163,6 +173,7 @@ export default function CourseDetailPage() {
         getCourseInstructor(courseId),
         getCourseReviews(courseId, 1, 20),
         getRelatedCourses(courseId, 4),
+        getCoursePricingPlans(courseId),
       ]);
       if (results[0].status === "fulfilled") setLessons(results[0].value.data);
       if (results[1].status === "fulfilled") setInstructor(results[1].value);
@@ -171,6 +182,13 @@ export default function CourseDetailPage() {
         setReviewTotal(results[2].value.totalElements);
       }
       if (results[3].status === "fulfilled") setRelated(results[3].value);
+      if (results[4].status === "fulfilled") {
+        setPricingPlans(results[4].value);
+        setSelectedPlanId(results[4].value[0]?.id || "");
+      } else {
+        setPricingPlans([]);
+        setSelectedPlanId("");
+      }
     } catch (requestError: any) {
       setError(requestError?.message || "This course could not be loaded.");
     } finally {
@@ -283,7 +301,16 @@ export default function CourseDetailPage() {
     if (enrolled) return router.push(`/courses/${resolvedCourseId}/learn`);
     setActionLoading(true);
     try {
-      if (!course?.price) {
+      if (selectedPlan) {
+        const order = await createCheckout(resolvedCourseId, selectedPlan.id);
+        if (order.status === "PAID") {
+          setEnrolled(true);
+          toast.success("Enrollment successful");
+          router.push(`/courses/${resolvedCourseId}/learn`);
+        } else {
+          router.push(`/orders/${order.id}`);
+        }
+      } else if (!course?.price) {
         await enrollCourse(resolvedCourseId);
         setEnrolled(true);
         toast.success("Enrollment successful");
@@ -695,8 +722,35 @@ export default function CourseDetailPage() {
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Course price</p>
               <p className="mt-1 text-3xl font-bold">
-                {formatPrice(course.price)}
+                {formatPrice(
+                  selectedPlan?.price ?? course.price,
+                  selectedPlan?.currency,
+                )}
               </p>
+              {pricingPlans.length > 0 && (
+                <div className="mt-5 space-y-2">
+                  <Label htmlFor="course-pricing-plan">Pricing plan</Label>
+                  <select
+                    id="course-pricing-plan"
+                    className="flex h-11 w-full rounded-md border bg-white px-3 text-sm"
+                    value={selectedPlan?.id || ""}
+                    onChange={(event) => setSelectedPlanId(event.target.value)}
+                    disabled={enrolled || actionLoading}
+                  >
+                    {pricingPlans.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.title} — {formatPrice(plan.price, plan.currency)}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedPlan && (
+                    <p className="text-xs text-muted-foreground">
+                      {selectedPlan.description} ·{" "}
+                      {selectedPlan.planType.replaceAll("_", " ")}
+                    </p>
+                  )}
+                </div>
+              )}
               {courseProgress && (
                 <div className="mt-5 rounded-lg bg-blue-50 p-4">
                   <div className="flex justify-between text-sm">
@@ -723,7 +777,7 @@ export default function CourseDetailPage() {
                   ? "Please wait…"
                   : enrolled
                     ? "Continue learning"
-                    : course.price
+                    : (selectedPlan?.price ?? course.price)
                       ? "Proceed to checkout"
                       : "Enroll for free"}
               </Button>

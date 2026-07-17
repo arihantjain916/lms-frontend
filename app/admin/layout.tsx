@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   BookOpen,
+  BadgeDollarSign,
   CalendarDays,
   ChevronLeft,
   FileText,
@@ -29,6 +30,11 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
+  {
+    href: "/admin/pricing-plans",
+    label: "Pricing plans",
+    icon: BadgeDollarSign,
+  },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/blogs", label: "Blog posts", icon: FileText },
   { href: "/admin/tutorials", label: "Tutorials", icon: GraduationCap },
