@@ -449,7 +449,7 @@ export default function TermsPage() {
                           contact us:
                         </p>
                         <ul>
-                          <li>By email: legal@eduportal.com</li>
+                          <li>By email: connect@arihantjain.cv</li>
                           <li>By phone: +919672670732</li>
                           <li>By mail: Jaipur, India</li>
                         </ul>

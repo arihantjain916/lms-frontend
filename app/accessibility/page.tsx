@@ -218,7 +218,7 @@ export default function AccessibilityPage() {
                           accessibility barriers on our website:
                         </p>
                         <ul>
-                          <li>Email: accessibility@eduportal.com</li>
+                          <li>Email: connect@arihantjain.cv</li>
                           <li>Phone: +919672670732</li>
                           <li>Postal address: Jaipur, India</li>
                         </ul>
@@ -417,7 +417,7 @@ export default function AccessibilityPage() {
                           ways:
                         </p>
                         <ul>
-                          <li>Email: accessibility@eduportal.com</li>
+                          <li>Email: connect@arihantjain.cv</li>
                           <li>Phone: +919672670732</li>
                           <li>
                             Contact form:{" "}

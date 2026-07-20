@@ -247,10 +247,10 @@ export default function ContactPage() {
                     Our friendly team is here to help.
                   </p>
                   <Link
-                    href="mailto:hello@eduportal.com"
+                    href="mailto:connect@arihantjain.cv"
                     className="text-blue-600 hover:underline font-medium"
                   >
-                    hello@eduportal.com
+                    connect@arihantjain.cv
                   </Link>
                 </CardContent>
               </Card>
@@ -630,7 +630,10 @@ export default function ContactPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="py-5">
-              <label htmlFor="live-chat-message" className="text-sm font-medium">
+              <label
+                htmlFor="live-chat-message"
+                className="text-sm font-medium"
+              >
                 How can we help?
               </label>
               <Textarea

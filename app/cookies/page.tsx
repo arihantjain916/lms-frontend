@@ -579,7 +579,7 @@ export default function CookiePolicyPage() {
                           other technologies, please contact us:
                         </p>
                         <ul>
-                          <li>By email: privacy@eduportal.com</li>
+                          <li>By email: connect@arihantjain.cv</li>
                           <li>By phone: +919672670732</li>
                           <li>By mail: Jaipur, India</li>
                         </ul>
