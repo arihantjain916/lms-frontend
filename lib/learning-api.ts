@@ -221,3 +221,21 @@ export async function getCertificate(certificateId: string) {
     await instance.get(`/certificates/${certificateId}`),
   );
 }
+export async function downloadCertificate(
+  certificateId: string,
+  certificateNumber?: string,
+) {
+  const blob = (await instance.get(
+    `/certificates/${certificateId}/download`,
+    { responseType: "blob" },
+  )) as unknown as Blob;
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `certificate-${certificateNumber || certificateId}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
