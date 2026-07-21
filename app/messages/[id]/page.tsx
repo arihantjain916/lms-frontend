@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
 import { ChevronLeft, Lock, RefreshCw, Send } from "lucide-react";
@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useRequireAuth } from "@/hooks/use-authenticated";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useScrollToLatest } from "@/hooks/use-scroll-to-latest";
 import {
   getConversation,
   getConversationMessages,
@@ -32,7 +33,7 @@ export default function ConversationPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const threadRef = useScrollToLatest<HTMLDivElement>(messages.length);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -64,10 +65,6 @@ export default function ConversationPage() {
         : [...current, latestMessage],
     );
   }, [id, latestMessage]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
 
   async function send(event: FormEvent) {
     event.preventDefault();
@@ -160,7 +157,10 @@ export default function ConversationPage() {
               </Button>
             </div>
 
-            <div className="h-[480px] space-y-4 overflow-y-auto bg-slate-50/70 p-4 sm:p-6">
+            <div
+              ref={threadRef}
+              className="h-[480px] space-y-4 overflow-y-auto bg-slate-50/70 p-4 sm:p-6"
+            >
               {messages.map((message) => {
                 const mine = message.senderId === user?.id;
                 return (
@@ -201,7 +201,6 @@ export default function ConversationPage() {
                   No messages yet.
                 </p>
               )}
-              <div ref={bottomRef} />
             </div>
 
             <form onSubmit={send} className="flex items-end gap-3 border-t p-4">

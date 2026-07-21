@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-authenticated";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useScrollToLatest } from "@/hooks/use-scroll-to-latest";
 import {
   deleteAdminConversation,
   deleteAdminMessage,
@@ -48,6 +49,7 @@ export default function AdminConversationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const threadRef = useScrollToLatest<HTMLDivElement>(messages.length);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -184,7 +186,10 @@ export default function AdminConversationDetailPage() {
         <ErrorState message={error || "Conversation not found"} retry={load} />
       ) : (
         <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-          <div className="max-h-[560px] space-y-4 overflow-y-auto bg-slate-50 p-5">
+          <div
+            ref={threadRef}
+            className="max-h-[560px] space-y-4 overflow-y-auto bg-slate-50 p-5"
+          >
             {messages.map((message) => {
               const mine = message.senderId === user?.id;
               return (
